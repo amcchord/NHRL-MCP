@@ -1,0 +1,35 @@
+#!/bin/bash
+
+# Template for setting up development environment variables
+# Copy this file to dev-env.sh and fill in your actual credentials
+# DO NOT commit the actual dev-env.sh file to version control!
+
+# TrueFinals API credentials
+export TRUEFINALS_API_USER_ID='your-user-id-here'
+export TRUEFINALS_API_KEY='your-api-key-here'
+
+# Optional: Custom API base URL (defaults to https://truefinals.com/api)
+# export TRUEFINALS_BASE_URL='https://custom-api.truefinals.com/api'
+
+# Optional: Tool filter mode (reporting, full-safe, full)
+export TRUEFINALS_TOOLS='full'
+
+# Optional: Disable specific tools (comma-separated)
+# export TRUEFINALS_DISABLED_TOOLS='tournaments,games'
+
+# Optional: Code signing for macOS builds
+# export DEVELOPER_ID='Developer ID Application: Your Name (TEAMID)'
+# export KEYCHAIN_PROFILE='your-keychain-profile'
+# export ENABLE_NOTARIZATION='true'
+
+echo "Development environment variables set for TrueFinals MCP Server"
+echo "User ID: $TRUEFINALS_API_USER_ID"
+echo "API Key: [HIDDEN]"
+echo "Tools Mode: $TRUEFINALS_TOOLS"
+
+# Usage:
+# 1. Copy this file: cp scripts/dev-env.template scripts/dev-env.sh
+# 2. Edit dev-env.sh with your actual credentials
+# 3. Source it: source scripts/dev-env.sh
+# 4. Run the server: make run
+# 5. Or run tests: make test-run 
