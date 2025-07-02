@@ -1,46 +1,44 @@
-# TrueFinals MCP Server
+# NHRL MCP Server
 
-A Model Context Protocol (MCP) server that provides tools for managing tournaments, games, locations, and players through the TrueFinals API.
+A Model Context Protocol (MCP) server that provides comprehensive tools for combat robot tournament management and statistics. This server integrates with both TrueFinals tournament management platform and NHRL (National Havoc Robot League) statistics systems, offering AI assistants complete access to tournament administration and historical robot combat data.
 
 ## Overview
 
-This MCP server enables AI assistants to interact with the TrueFinals tournament management platform, providing comprehensive tools for tournament administration. It supports all major tournament operations including bracket management, game scoring, location coordination, and player management.
+This MCP server enables AI assistants to interact with:
+
+- **TrueFinals Tournament Management**: Complete tournament administration including bracket management, game scoring, location coordination, and player management
+- **NHRL Statistics**: Access to comprehensive robot combat statistics, fight records, rankings, and live tournament data from the National Havoc Robot League
+
+Whether you're managing a live tournament or analyzing historical robot combat performance, this server provides all the tools needed for comprehensive tournament and statistics management.
 
 ## Features
 
-### 🏆 Tournament Management
+### 🏆 TrueFinals Tournament Management
 - Create, update, and delete tournaments
-- Start and reset tournaments
+- Start and reset tournaments  
 - Manage tournament settings and format options
 - Handle tournament webhooks and overlay parameters
 - Support for multiple tournament formats (single elimination, double elimination, round robin)
+- Complete game lifecycle management
+- Location queue management and scoring
+- Player seeding, check-ins, and disqualification handling
+- Bracket visualization and progression tracking
 
-### 🎮 Game Management
-- List and manage all tournament games
-- Create and edit exhibition games
-- Update game scores and states
-- Handle game check-ins and scheduling
-- Support for bulk game operations
-- Location assignment and management
-
-### 📍 Location Management
-- Add, update, and delete tournament locations
-- Start and stop games at specific locations
-- Manage location queues and game assignments
-- Update game scores directly from locations
-- Handle location blocking and availability
-
-### 👥 Player Management
-- Add, update, and delete players
-- Manage player seeding and rankings
-- Handle player check-ins and disqualifications
-- Support for bulk player operations
-- Randomize tournament seeding
-- Track player statistics and placement
+### 📊 NHRL Statistics & Analytics
+- **Bot Performance Data**: Rankings, fight records, win/loss statistics, KO records
+- **Head-to-Head Analysis**: Detailed matchup history between any two bots
+- **Seasonal Statistics**: Performance tracking across different NHRL seasons
+- **Weight Class Analytics**: Podium finishers, fastest KOs, longest winning streaks
+- **Live Tournament Data**: Real-time match information from BrettZone system
+- **Video Integration**: Direct links to match review videos with timestamp control
+- **Qualification System**: Understanding NHRL tournament qualification paths
 
 ## Available Tools
 
-### 1. Tournaments Tool (12 operations)
+### 1. TrueFinals Tournaments Tool
+**Tool Name**: `truefinals_tournaments`
+
+**Operations** (12 total):
 - `list` - Get user's tournaments
 - `get` - Get tournament details
 - `create` - Create new tournament
@@ -54,7 +52,10 @@ This MCP server enables AI assistants to interact with the TrueFinals tournament
 - `update_overlay_params` - Update overlay parameters
 - `push_schedule` - Push game schedule
 
-### 2. Games Tool (13 operations)
+### 2. TrueFinals Games Tool
+**Tool Name**: `truefinals_games`
+
+**Operations** (13 total):
 - `list` - Get all tournament games
 - `get` - Get specific game details
 - `add_exhibition` - Add exhibition game
@@ -70,7 +71,10 @@ This MCP server enables AI assistants to interact with the TrueFinals tournament
 - `update_checkin` - Update player check-in
 - `undo` - Undo completed game
 
-### 3. Locations Tool (8 operations)
+### 3. TrueFinals Locations Tool
+**Tool Name**: `truefinals_locations`
+
+**Operations** (8 total):
 - `list` - Get all tournament locations
 - `get` - Get specific location details
 - `add` - Add new location
@@ -80,7 +84,10 @@ This MCP server enables AI assistants to interact with the TrueFinals tournament
 - `stop_game` - Stop active game at location
 - `update_game_scores` - Update scores for location's active game
 
-### 4. Players Tool (10 operations)
+### 4. TrueFinals Players Tool
+**Tool Name**: `truefinals_players`
+
+**Operations** (10 total):
 - `list` - Get all tournament players
 - `get` - Get specific player details
 - `add` - Add new player
@@ -92,11 +99,48 @@ This MCP server enables AI assistants to interact with the TrueFinals tournament
 - `checkin` - Check player into match
 - `disqualify` - Disqualify player
 
+### 5. TrueFinals Bracket Tool
+**Tool Name**: `truefinals_bracket`
+
+**Operations** (3 total):
+- `get_round` - Get specific bracket round details
+- `get_standings` - Get current tournament standings
+- `format` - Get bracket format information
+
+### 6. NHRL Stats Tool ⭐ 
+**Tool Name**: `nhrl_stats`
+
+**Operations** (15 total):
+
+#### Bot-Specific Operations:
+- `get_bot_rank` - Get current bot ranking
+- `get_bot_fights` - Get complete fight history for a bot
+- `get_bot_head_to_head` - Get head-to-head records against all opponents
+- `get_bot_stats_by_season` - Get seasonal performance statistics
+- `get_bot_streak_stats` - Get current and longest win/lose streaks
+- `get_bot_event_participants` - Get tournament participation history
+
+#### Weight Class Operations:
+- `get_weight_class_dumpster_count` - Get podium finishers (1st, 2nd, 3rd place)
+- `get_weight_class_event_winners` - Get event winners by weight class
+- `get_weight_class_fastest_kos` - Get fastest knockout records
+- `get_weight_class_longest_streaks` - Get longest winning streaks
+- `get_weight_class_stat_summary` - Get comprehensive rankings and statistics
+
+#### Tournament & System Operations:
+- `get_random_fight` - Get a random historical fight
+- `get_tournament_matches` - Get live tournament match data from BrettZone
+- `get_match_review_url` - Generate video review URLs for specific matches
+- `get_qualification_system` - Get information about NHRL qualification system
+
+**Supported Weight Classes**: 3lb, 12lb, 30lb, beetleweight, antweight, hobbyweight
+**Supported Seasons**: current, all-time, 2018-2019, 2020, 2021, 2022, 2023
+
 ## Installation and Setup
 
 ### Prerequisites
 - Go 1.19 or later
-- TrueFinals API credentials (User ID and API Key)
+- TrueFinals API credentials (User ID and API Key) for tournament management features
 
 ### Building the Server
 
@@ -106,41 +150,39 @@ git clone <repository-url>
 cd NHRL-MCP
 
 # Build the server
-go build -o truefinals-mcp-server
+go build -o nhrl-mcp-server
 
 # Or use the pre-built binary
-chmod +x truefinals-mcp-server
+chmod +x nhrl-mcp-server
 ```
 
 ### Configuration
 
-The server requires TrueFinals API credentials. Set them using environment variables:
+#### For TrueFinals Features
+The server requires TrueFinals API credentials for tournament management features:
 
 ```bash
 export TRUEFINALS_API_USER_ID="your_user_id"
 export TRUEFINALS_API_KEY="your_api_key"
 
-# Optional configuration
+# Optional TrueFinals configuration
 export TRUEFINALS_BASE_URL="https://truefinals.com/api"  # Custom API base URL
 export TRUEFINALS_TOOLS="full"                           # Tool filter mode
 export TRUEFINALS_DISABLED_TOOLS="tournaments,games"     # Disable specific tools
 ```
 
-Or pass them as command-line arguments:
-
-```bash
-./truefinals-mcp-server -api-user-id "your_user_id" -api-key "your_api_key"
-```
+#### For NHRL Features
+NHRL statistics features work without additional configuration - they access public NHRL APIs directly.
 
 ### Usage
 
 #### Basic Usage
 ```bash
-# Start the server with default settings
-./truefinals-mcp-server
+# Start the server (NHRL stats work immediately, TrueFinals requires credentials)
+./nhrl-mcp-server
 
-# Start with specific credentials
-./truefinals-mcp-server -api-user-id "your_user_id" -api-key "your_api_key"
+# Start with TrueFinals credentials for full functionality
+./nhrl-mcp-server -api-user-id "your_user_id" -api-key "your_api_key"
 ```
 
 #### Tool Filtering
@@ -148,27 +190,27 @@ The server supports filtering available tools based on safety and permission lev
 
 ```bash
 # Show only reporting tools (read-only operations)
-./truefinals-mcp-server -tools reporting
+./nhrl-mcp-server -tools reporting
 
 # Show safe modification tools (excludes dangerous operations)
-./truefinals-mcp-server -tools full-safe
+./nhrl-mcp-server -tools full-safe
 
 # Show all tools (default)
-./truefinals-mcp-server -tools full
+./nhrl-mcp-server -tools full
 ```
 
 #### Available Tool Modes:
-- **`reporting`**: Read-only operations (list, get operations)
-- **`full-safe`**: Safe modification operations (excludes delete, reset, bulk operations)
-- **`full`**: All operations (default)
+- **`reporting`**: Read-only operations (list, get operations) - safest mode
+- **`full-safe`**: Safe modification operations (excludes delete, reset, disqualify operations)
+- **`full`**: All operations including potentially destructive ones
 
 #### Command Line Options
 ```bash
-Usage: ./truefinals-mcp-server [options]
+Usage: ./nhrl-mcp-server [options]
 
 Options:
   -api-user-id string     API User ID for TrueFinals service
-  -api-key string         API key for TrueFinals service
+  -api-key string         API key for TrueFinals service  
   -base-url string        Base URL for TrueFinals API (optional)
   -tools string           Tools mode: reporting, full-safe, full
   -disabled-tools string  Comma-separated list of tool names to disable
@@ -177,42 +219,53 @@ Options:
   -help                  Show help information
 ```
 
-## MCP Integration
+## Claude Desktop Integration
 
-### Connecting to AI Assistants
+### Installation
 
-The server implements the Model Context Protocol and can be integrated with compatible AI assistants like Claude Desktop or other MCP-compatible applications.
+The easiest way to use this MCP server is with Claude Desktop. Here's the complete setup:
 
-Example MCP configuration for Claude Desktop:
+#### Step 1: Install the Server
+
+```bash
+# Download and install to system location
+sudo cp nhrl-mcp-server /usr/local/bin/
+sudo chmod +x /usr/local/bin/nhrl-mcp-server
+```
+
+#### Step 2: Configure Claude Desktop
+
+Add this configuration to your Claude Desktop config file:
+
+**macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`  
+**Windows**: `%APPDATA%\Claude\claude_desktop_config.json`  
+**Linux**: `~/.config/Claude/claude_desktop_config.json`
+
+### Configuration Examples
+
+#### Option 1: NHRL Stats Only (No TrueFinals credentials needed)
 ```json
 {
   "mcpServers": {
-    "truefinals": {
-      "command": "/path/to/truefinals-mcp-server",
-      "args": ["-api-user-id", "your_user_id", "-api-key", "your_api_key"],
+    "nhrl": {
+      "command": "/usr/local/bin/nhrl-mcp-server",
+      "args": ["-tools", "reporting"],
       "env": {}
     }
   }
 }
 ```
 
-### Claude Desktop Configuration
-
-To use with Claude Desktop, add this configuration to your Claude Desktop config file:
-
-**macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`  
-**Windows**: `%APPDATA%\Claude\claude_desktop_config.json`  
-**Linux**: `~/.config/Claude/claude_desktop_config.json`
-
-Ready-to-use configuration (copy and paste this into your Claude Desktop config):
+#### Option 2: Full Functionality with TrueFinals (Recommended)
 ```json
 {
   "mcpServers": {
-    "truefinals": {
-      "command": "/usr/local/bin/truefinals-mcp-server",
+    "nhrl": {
+      "command": "/usr/local/bin/nhrl-mcp-server",
       "args": [
         "-api-user-id", "YOUR_TRUEFINALS_USER_ID",
-        "-api-key", "YOUR_TRUEFINALS_API_KEY"
+        "-api-key", "YOUR_TRUEFINALS_API_KEY",
+        "-tools", "full-safe"
       ],
       "env": {}
     }
@@ -220,53 +273,90 @@ Ready-to-use configuration (copy and paste this into your Claude Desktop config)
 }
 ```
 
-Replace `YOUR_TRUEFINALS_USER_ID` and `YOUR_TRUEFINALS_API_KEY` with your actual TrueFinals API credentials.
+#### Option 3: Using Environment Variables
+```json
+{
+  "mcpServers": {
+    "nhrl": {
+      "command": "/usr/local/bin/nhrl-mcp-server",
+      "args": ["-tools", "full-safe"],
+      "env": {
+        "TRUEFINALS_API_USER_ID": "YOUR_TRUEFINALS_USER_ID",
+        "TRUEFINALS_API_KEY": "YOUR_TRUEFINALS_API_KEY"
+      }
+    }
+  }
+}
+```
 
-### Tool Schemas
+#### Option 4: NHRL-Only Configuration
+```json
+{
+  "mcpServers": {
+    "nhrl-stats": {
+      "command": "/usr/local/bin/nhrl-mcp-server",
+      "args": [
+        "-disabled-tools", "truefinals_tournaments,truefinals_games,truefinals_locations,truefinals_players,truefinals_bracket"
+      ],
+      "env": {}
+    }
+  }
+}
+```
 
-All tools include comprehensive JSON schemas with:
-- Required and optional parameters
-- Parameter validation rules
-- Enum values for status fields
-- Detailed parameter descriptions
-- Type constraints and limits
+**Replace** `YOUR_TRUEFINALS_USER_ID` and `YOUR_TRUEFINALS_API_KEY` with your actual TrueFinals API credentials if you want tournament management features.
 
-## API Reference
+### Example Usage with Claude
 
-The server interfaces with the TrueFinals API v1. Key data structures include:
+Once configured, you can ask Claude questions like:
 
-### Tournament
-- Tournament metadata and settings
-- Format configuration (single/double elimination, round robin)
-- Player and location management
-- Game bracket organization
+**NHRL Statistics Examples:**
+- "What's Tombstone's current ranking and fight record?"
+- "Show me the head-to-head record between Minotaur and Witch Doctor"
+- "What are the fastest KOs in the 3lb weight class?"
+- "Get the current tournament matches for nhrl_june25_30lb"
 
-### Game
-- Game state and scoring
-- Player check-in status
-- Location assignment
-- Bracket progression
+**TrueFinals Tournament Management Examples:**
+- "Create a new 3lb tournament for this weekend"
+- "List all games in tournament T123 and their current status"
+- "Update the score for game G456 to show Tombstone won 3-1"
+- "Show me the current bracket standings"
 
-### Location
-- Physical tournament locations
-- Game queue management
-- Active game tracking
-- Availability status
+## API Integration Details
 
-### Player
-- Player information and statistics
-- Seeding and ranking
-- Check-in status
-- Match history
+### NHRL APIs
+The server integrates with two NHRL systems:
+- **NHRL Statsbook API**: `https://stats.nhrl.io/statsbook` - Historical statistics and rankings
+- **BrettZone API**: `https://brettzone.nhrl.io/brettZone/backend` - Live tournament data
 
-## Error Handling
+### TrueFinals API
+- **TrueFinals API v1**: `https://truefinals.com/api` - Tournament management platform
+
+## Data Structures
+
+### NHRL Data Types
+- **Bot Statistics**: Rankings, fight records, win/loss ratios, KO statistics
+- **Fight Records**: Individual match data with timestamps, results, video links
+- **Tournament Matches**: Live match data with round information and implications
+- **Head-to-Head Records**: Detailed matchup statistics between specific bots
+- **Qualification Rounds**: Q1, Q2W, Q2L, Q3 progression paths
+
+### TrueFinals Data Types
+- **Tournaments**: Tournament metadata, settings, and format configuration
+- **Games**: Game state, scoring, player check-ins, location assignments
+- **Locations**: Physical tournament locations with queue management
+- **Players**: Player information, seeding, rankings, and match history
+- **Brackets**: Tournament bracket structure and progression
+
+## Error Handling & Reliability
 
 The server provides comprehensive error handling with:
-- Detailed error messages
+- Detailed error messages with context
 - HTTP status code mapping
-- Parameter validation
+- Parameter validation with helpful feedback
 - API rate limiting awareness
 - Network error recovery
+- Graceful degradation when services are unavailable
 
 ## Development
 
@@ -275,12 +365,16 @@ The server provides comprehensive error handling with:
 NHRL-MCP/
 ├── main.go                 # Server entry point and MCP protocol handling
 ├── api.go                  # TrueFinals API client and data structures
-├── tools_tournaments.go    # Tournament management operations
-├── tools_games.go         # Game management operations  
-├── tools_locations.go     # Location management operations
-├── tools_players.go       # Player management operations
+├── nhrl_api.go            # NHRL API clients and data structures
+├── tools_tournaments.go    # TrueFinals tournament management
+├── tools_games.go         # TrueFinals game management  
+├── tools_locations.go     # TrueFinals location management
+├── tools_players.go       # TrueFinals player management
+├── tools_bracket.go       # TrueFinals bracket operations
+├── tools_nhrl.go          # NHRL statistics and live data
 ├── docs/
 │   └── openapi.json       # TrueFinals API specification
+├── scripts/               # Build and deployment scripts
 ├── go.mod                 # Go module dependencies
 └── README.md              # This file
 ```
@@ -289,19 +383,20 @@ NHRL-MCP/
 
 To add new operations:
 
-1. Add the API endpoint to `api.go`
-2. Implement the operation function in the appropriate `tools_*.go` file
-3. Add the operation to the tool's handler switch statement
-4. Update the tool schema with the new operation
-5. Test the implementation
+1. **For NHRL features**: Add API endpoint functions to `nhrl_api.go`, implement operation in `tools_nhrl.go`
+2. **For TrueFinals features**: Add API endpoint to `api.go`, implement in appropriate `tools_*.go` file
+3. Update the tool's operation enum in the schema
+4. Add operation handler to the switch statement
+5. Test the implementation thoroughly
 
 ## Contributing
 
 Contributions are welcome! Please ensure:
-- Code follows Go conventions
-- All operations include proper error handling
+- Code follows Go conventions and includes proper error handling
 - Tool schemas are updated for new operations
+- Both NHRL and TrueFinals functionality is properly tested
 - Documentation is updated accordingly
+- New features include appropriate safety considerations
 
 ## License
 
@@ -310,14 +405,35 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## Support
 
 For issues related to:
-- **TrueFinals API**: Contact TrueFinals support
+- **NHRL Statistics**: Check NHRL statsbook API availability and bot name formatting
+- **TrueFinals API**: Contact TrueFinals support or verify API credentials
 - **MCP Server**: Create an issue in this repository
-- **Integration**: Check MCP documentation and AI assistant configuration
+- **Claude Desktop Integration**: Check MCP documentation and configuration format
 
 ## Version History
 
-- **v1.0.0**: Initial release with full tournament, game, location, and player management
-  - 43 total operations across 4 tools
-  - Complete TrueFinals API coverage
-  - Tool filtering and safety modes
-  - Comprehensive error handling and validation 
+- **v1.0.0**: Initial hybrid release
+  - 6 integrated tools with 61 total operations
+  - Complete TrueFinals tournament management (48 operations)
+  - Comprehensive NHRL statistics integration (15 operations)
+  - Advanced tool filtering and safety modes
+  - Claude Desktop ready configuration
+  - Real-time tournament data from BrettZone
+  - Historical statistics from NHRL Statsbook
+  - Video review integration with timestamp control
+
+## Quick Start Examples
+
+### Get Started with NHRL Stats (No Credentials Required)
+```bash
+# Install and test NHRL functionality immediately
+./nhrl-mcp-server -disabled-tools "truefinals_tournaments,truefinals_games,truefinals_locations,truefinals_players,truefinals_bracket"
+```
+
+### Get Started with Full Tournament Management
+```bash
+# Full functionality (requires TrueFinals credentials)
+./nhrl-mcp-server -api-user-id "your_user_id" -api-key "your_api_key" -tools full-safe
+```
+
+This MCP server provides the most comprehensive combat robot tournament and statistics management available for AI assistants, combining live tournament administration with deep historical analytics in a single, powerful tool. 
