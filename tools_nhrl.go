@@ -15,7 +15,7 @@ func handleNHRLStatsTool(args map[string]interface{}) (string, error) {
 
 	// Check if operation is allowed in current tools mode
 	if !isOperationAllowed("nhrl_stats", operation) {
-		return "", fmt.Errorf("operation '%s' not allowed in '%s' mode", operation, toolsMode)
+		return "", fmt.Errorf(getOperationNotAllowedError(operation))
 	}
 
 	switch operation {

@@ -169,6 +169,7 @@ export TRUEFINALS_API_KEY="your_api_key"
 export TRUEFINALS_BASE_URL="https://truefinals.com/api"  # Custom API base URL
 export TRUEFINALS_TOOLS="full"                           # Tool filter mode
 export TRUEFINALS_DISABLED_TOOLS="tournaments,games"     # Disable specific tools
+export TRUEFINALS_READ_ONLY="true"                       # Enable read-only mode
 ```
 
 #### For NHRL Features
@@ -199,10 +200,26 @@ The server supports filtering available tools based on safety and permission lev
 ./nhrl-mcp-server -tools full
 ```
 
+#### Read-Only Mode
+For maximum safety, you can enable read-only mode which only allows read operations regardless of the tools mode:
+
+```bash
+# Enable read-only mode via CLI flag
+./nhrl-mcp-server -read-only
+
+# Enable read-only mode via environment variable
+export TRUEFINALS_READ_ONLY=true
+./nhrl-mcp-server
+
+# Read-only mode works with any tools mode and overrides it
+./nhrl-mcp-server -tools full -read-only  # Still only allows read operations
+```
+
 #### Available Tool Modes:
 - **`reporting`**: Read-only operations (list, get operations) - safest mode
 - **`full-safe`**: Safe modification operations (excludes delete, reset, disqualify operations)
 - **`full`**: All operations including potentially destructive ones
+- **Read-only mode**: Only read operations allowed (overrides all tool modes when enabled)
 
 #### Command Line Options
 ```bash
@@ -214,6 +231,7 @@ Options:
   -base-url string        Base URL for TrueFinals API (optional)
   -tools string           Tools mode: reporting, full-safe, full
   -disabled-tools string  Comma-separated list of tool names to disable
+  -read-only              Enable read-only mode - only allow read operations
   -exit-after-first       Exit after processing the first request
   -version               Show version information and exit
   -help                  Show help information
@@ -289,7 +307,24 @@ Add this configuration to your Claude Desktop config file:
 }
 ```
 
-#### Option 4: NHRL-Only Configuration
+#### Option 4: Read-Only Mode (Maximum Safety)
+```json
+{
+  "mcpServers": {
+    "nhrl": {
+      "command": "/usr/local/bin/nhrl-mcp-server",
+      "args": [
+        "-api-user-id", "YOUR_TRUEFINALS_USER_ID",
+        "-api-key", "YOUR_TRUEFINALS_API_KEY",
+        "-read-only"
+      ],
+      "env": {}
+    }
+  }
+}
+```
+
+#### Option 5: NHRL-Only Configuration
 ```json
 {
   "mcpServers": {

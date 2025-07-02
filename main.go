@@ -56,6 +56,7 @@ const (
 
 var toolsMode string = ToolsFullSafe // Default to full-safe access
 var disabledTools []string           // List of disabled tool names
+var readOnlyMode bool = false        // Read-only mode flag
 
 // Helper functions for tools filtering
 func isToolAllowed(toolName string) bool {
@@ -90,6 +91,11 @@ func isToolDisabled(toolName string) bool {
 }
 
 func isOperationAllowed(toolName, operation string) bool {
+	// If read-only mode is enabled, only allow read operations
+	if readOnlyMode {
+		return isReadOperation(operation)
+	}
+
 	switch toolsMode {
 	case ToolsReporting:
 		// Only allow read operations
@@ -126,8 +132,16 @@ func isDangerousTool(toolName string) bool {
 
 func isReadOperation(operation string) bool {
 	readOps := []string{
+		// Basic read operations
 		"get", "list", "details", "format", "overlay_params", "description", "private", "webhooks",
+		// Bracket read operations
 		"get_round", "get_standings",
+		// NHRL stats read operations
+		"get_bot_rank", "get_bot_fights", "get_bot_head_to_head", "get_bot_stats_by_season",
+		"get_bot_streak_stats", "get_bot_event_participants", "get_weight_class_dumpster_count",
+		"get_weight_class_event_winners", "get_weight_class_fastest_kos", "get_weight_class_longest_streaks",
+		"get_weight_class_stat_summary", "get_random_fight", "get_tournament_matches",
+		"get_match_review_url", "get_qualification_system",
 	}
 	for _, op := range readOps {
 		if op == operation {
@@ -151,6 +165,14 @@ func isDangerousOperation(toolName, operation string) bool {
 	return false
 }
 
+// getOperationNotAllowedError returns an appropriate error message when an operation is not allowed
+func getOperationNotAllowedError(operation string) string {
+	if readOnlyMode {
+		return fmt.Sprintf("operation '%s' not allowed in read-only mode", operation)
+	}
+	return fmt.Sprintf("operation '%s' not allowed in '%s' mode", operation, toolsMode)
+}
+
 func main() {
 	// Parse command line flags
 	var cliAPIKey = flag.String("api-key", "", "API key for TrueFinals service (overrides TRUEFINALS_API_KEY environment variable)")
@@ -158,6 +180,7 @@ func main() {
 	var cliBaseURL = flag.String("base-url", "", "Base URL for TrueFinals API (overrides TRUEFINALS_BASE_URL environment variable)")
 	var cliTools = flag.String("tools", "", "Tools mode: reporting, full-safe, full (overrides TRUEFINALS_TOOLS environment variable)")
 	var cliDisabledTools = flag.String("disabled-tools", "", "Comma-separated list of tool names to disable (overrides TRUEFINALS_DISABLED_TOOLS environment variable)")
+	var cliReadOnly = flag.Bool("read-only", false, "Enable read-only mode - only allow read operations (overrides TRUEFINALS_READ_ONLY environment variable)")
 	var showVersion = flag.Bool("version", false, "Show version information and exit")
 	var exitAfterFirst = flag.Bool("exit-after-first", false, "Exit after processing the first request instead of running continuously")
 	flag.Parse()
@@ -166,6 +189,14 @@ func main() {
 	if *showVersion {
 		fmt.Printf("%s version %s\n", ServerName, Version)
 		os.Exit(0)
+	}
+
+	// Get read-only mode from CLI flag or environment variable
+	// CLI flag takes precedence over environment variable
+	if *cliReadOnly {
+		readOnlyMode = true
+	} else if envReadOnly := os.Getenv("TRUEFINALS_READ_ONLY"); envReadOnly != "" {
+		readOnlyMode = envReadOnly == "true" || envReadOnly == "1"
 	}
 
 	// Get tools mode from CLI flag or environment variable
@@ -195,6 +226,11 @@ func main() {
 			}
 		}
 		log.Printf("Disabled tools: %v", disabledTools)
+	}
+
+	// Log read-only mode status
+	if readOnlyMode {
+		log.Printf("Read-only mode enabled - only read operations allowed")
 	}
 
 	// Validate tools mode
