@@ -44,7 +44,7 @@ type ToolContent struct {
 // Configuration
 const (
 	ServerName = "nhrl-mcp-server"
-	Version    = "1.0.0"
+	Version    = "1.1.0"
 )
 
 // Tools filtering modes
