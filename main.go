@@ -43,7 +43,7 @@ type ToolContent struct {
 
 // Configuration
 const (
-	ServerName = "truefinals-mcp-server"
+	ServerName = "nhrl-mcp-server"
 	Version    = "1.0.0"
 )
 
@@ -108,6 +108,7 @@ func isOperationAllowed(toolName, operation string) bool {
 func isReadOnlyTool(toolName string) bool {
 	readOnlyTools := []string{
 		"truefinals_tournaments", "truefinals_games", "truefinals_locations", "truefinals_players", "truefinals_bracket",
+		"nhrl_stats",
 	}
 	for _, tool := range readOnlyTools {
 		if tool == toolName {
@@ -236,7 +237,7 @@ func main() {
 		log.Fatal("Error: API User ID not provided. Use --api-user-id flag or set TRUEFINALS_API_USER_ID environment variable")
 	}
 
-	log.Println("TrueFinals MCP Server starting...")
+	log.Println("NHRL MCP Server starting...")
 
 	// Start MCP server
 	startMCPServer(*exitAfterFirst)
@@ -457,6 +458,20 @@ func handleToolCall(request MCPRequest) MCPResponse {
 			}
 		}
 
+	case "nhrl_stats":
+		data, err := handleNHRLStatsTool(args)
+		if err != nil {
+			result = ToolResult{
+				Content: []ToolContent{{Type: "text", Text: fmt.Sprintf("Error: %v", err)}},
+				IsError: true,
+			}
+		} else {
+			result = ToolResult{
+				Content: []ToolContent{{Type: "text", Text: data}},
+				IsError: false,
+			}
+		}
+
 	default:
 		return sendError(request.ID, -32601, fmt.Sprintf("Unknown tool: %s", name), nil)
 	}
@@ -502,6 +517,9 @@ func getAllTools() []ToolInfo {
 	}
 	if isToolAllowed("truefinals_bracket") {
 		tools = append(tools, getBracketToolInfo())
+	}
+	if isToolAllowed("nhrl_stats") {
+		tools = append(tools, getNHRLStatsToolInfo())
 	}
 
 	return tools

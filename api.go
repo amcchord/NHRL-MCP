@@ -285,14 +285,18 @@ func enrichGameWithPlayerAndLocationInfo(game map[string]interface{}, tournament
 	playersData, _ := getPlayersData(tournamentID)
 	locationsData, _ := getLocationsData(tournamentID)
 
-	// Create player ID to name map
-	playerMap := make(map[string]string)
+	// Create player ID to enriched player map
+	playerMap := make(map[string]map[string]interface{})
+	playerNameMap := make(map[string]string)
 	if players, ok := playersData.([]interface{}); ok {
 		for _, p := range players {
 			if player, ok := p.(map[string]interface{}); ok {
 				if id, ok := player["id"].(string); ok {
+					// Enrich player with NHRL stats
+					enrichedPlayer := enrichPlayerWithNHRLStats(player)
+					playerMap[id] = enrichedPlayer
 					if name, ok := player["name"].(string); ok {
-						playerMap[id] = name
+						playerNameMap[id] = name
 					}
 				}
 			}
@@ -322,9 +326,18 @@ func enrichGameWithPlayerAndLocationInfo(game map[string]interface{}, tournament
 				for k, v := range slot {
 					enrichedSlot[k] = v
 				}
-				// Add player name if player ID exists
+				// Add player name and NHRL stats if player ID exists
 				if playerID, ok := slot["playerID"].(string); ok && playerID != "" {
-					enrichedSlot["playerName"] = playerMap[playerID]
+					enrichedSlot["playerName"] = playerNameMap[playerID]
+					// Add NHRL stats if available
+					if enrichedPlayer, ok := playerMap[playerID]; ok {
+						if nhrlRank, ok := enrichedPlayer["nhrl_rank"]; ok {
+							enrichedSlot["nhrl_rank"] = nhrlRank
+						}
+						if nhrlStreak, ok := enrichedPlayer["nhrl_current_streak"]; ok {
+							enrichedSlot["nhrl_current_streak"] = nhrlStreak
+						}
+					}
 				}
 				enrichedSlots[i] = enrichedSlot
 			}
@@ -335,6 +348,19 @@ func enrichGameWithPlayerAndLocationInfo(game map[string]interface{}, tournament
 	// Add location name if location ID exists
 	if locationID, ok := game["locationID"].(string); ok && locationID != "" {
 		game["locationName"] = locationMap[locationID]
+	}
+
+	// Add round qualification information if game name matches qualification rounds
+	if gameName, ok := game["name"].(string); ok && gameName != "" {
+		roundInfo := getRoundInfo(gameName)
+		// Only add qualification info if it's actually a qualification round
+		if roundInfo.Code == gameName && (gameName == "Q1" || gameName == "Q2W" || gameName == "Q2L" || gameName == "Q3") {
+			game["roundName"] = roundInfo.Name
+			game["roundDescription"] = roundInfo.Description
+			game["winImplication"] = roundInfo.WinResult
+			game["loseImplication"] = roundInfo.LoseResult
+			game["isQualificationRound"] = true
+		}
 	}
 
 	return game
@@ -396,12 +422,22 @@ func enrichLocationWithGameInfo(location map[string]interface{}, tournamentID st
 					}
 				}
 
-				location["activeGameInfo"] = map[string]interface{}{
+				activeGameInfo := map[string]interface{}{
 					"gameID":      activeGameID,
 					"gameName":    enrichedGame["name"],
 					"playerNames": playerNames,
 					"state":       enrichedGame["state"],
 				}
+
+				// Add qualification round info if present
+				if roundName, ok := enrichedGame["roundName"].(string); ok {
+					activeGameInfo["roundName"] = roundName
+				}
+				if isQual, ok := enrichedGame["isQualificationRound"].(bool); ok && isQual {
+					activeGameInfo["isQualificationRound"] = true
+				}
+
+				location["activeGameInfo"] = activeGameInfo
 			}
 		}
 	}
@@ -409,7 +445,7 @@ func enrichLocationWithGameInfo(location map[string]interface{}, tournamentID st
 	return location
 }
 
-// EnrichPlayerDataWithProfileDetails adds more details from profile info
+// EnrichPlayerDataWithProfileDetails adds more details from profile info and NHRL stats
 func enrichPlayerDataWithProfileDetails(player map[string]interface{}) map[string]interface{} {
 	// Extract useful info from profileInfo if it exists
 	if profileInfo, ok := player["profileInfo"].(map[string]interface{}); ok {
@@ -437,11 +473,15 @@ func enrichPlayerDataWithProfileDetails(player map[string]interface{}) map[strin
 		player["displayName"] = player["name"]
 	}
 
+	// Enrich with NHRL stats
+	player = enrichPlayerWithNHRLStats(player)
+
 	return player
 }
 
 // EnrichTournamentData adds human-readable information to tournament data
 func enrichTournamentData(tournament map[string]interface{}) map[string]interface{} {
+	// First apply existing TrueFinals enrichment
 	// Enrich players
 	if players, ok := tournament["players"].([]interface{}); ok {
 		enrichedPlayers := make([]interface{}, len(players))
@@ -516,6 +556,19 @@ func enrichTournamentData(tournament map[string]interface{}) map[string]interfac
 					game["slots"] = enrichedSlots
 				}
 
+				// Add round qualification information if game name matches qualification rounds
+				if gameName, ok := game["name"].(string); ok && gameName != "" {
+					roundInfo := getRoundInfo(gameName)
+					// Only add qualification info if it's actually a qualification round
+					if roundInfo.Code == gameName && (gameName == "Q1" || gameName == "Q2W" || gameName == "Q2L" || gameName == "Q3") {
+						game["roundName"] = roundInfo.Name
+						game["roundDescription"] = roundInfo.Description
+						game["winImplication"] = roundInfo.WinResult
+						game["loseImplication"] = roundInfo.LoseResult
+						game["isQualificationRound"] = true
+					}
+				}
+
 				enrichedGames[i] = game
 			} else {
 				enrichedGames[i] = g
@@ -534,5 +587,8 @@ func enrichTournamentData(tournament map[string]interface{}) map[string]interfac
 
 	tournament["enrichmentNote"] = "Player names, display names, and location names are included throughout for better readability"
 
-	return tournament
+	// Then apply NHRL enrichment
+	enrichedWithNHRL := enrichTournamentWithNHRLContext(tournament)
+
+	return enrichedWithNHRL
 }

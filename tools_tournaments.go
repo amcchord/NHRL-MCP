@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 )
 
 // handleTournamentsTool handles all tournament operations
@@ -61,7 +62,7 @@ func handleTournamentsTool(args map[string]interface{}) (string, error) {
 func getTournamentsToolInfo() ToolInfo {
 	return ToolInfo{
 		Name:        "truefinals_tournaments",
-		Description: "Manage tournaments in TrueFinals. Create, update, delete, and query tournaments and their settings.",
+		Description: "Manage tournaments in TrueFinals. Create, update, delete, and query tournaments and their settings. Note: When listing tournaments, test tournaments (containing 'TEST' or 'test' in the name) are filtered out by default.",
 		InputSchema: map[string]interface{}{
 			"type": "object",
 			"properties": map[string]interface{}{
@@ -157,6 +158,10 @@ func getTournamentsToolInfo() ToolInfo {
 					"type":        "integer",
 					"description": "Delay in minutes for pushing game schedules",
 				},
+				"include_test_tournaments": map[string]interface{}{
+					"type":        "boolean",
+					"description": "Whether to include tournaments with 'TEST' or 'test' in the name (default: false)",
+				},
 			},
 			"required": []string{"operation"},
 		},
@@ -177,9 +182,30 @@ func listTournaments(args map[string]interface{}) (string, error) {
 		return "", fmt.Errorf("failed to parse tournaments response: %w", err)
 	}
 
+	// Check if we should include test tournaments
+	includeTestTournaments := false
+	if include, ok := args["include_test_tournaments"].(bool); ok {
+		includeTestTournaments = include
+	}
+
+	// Filter out test tournaments unless specifically requested
+	var filteredTournaments TournamentListResponse
+	for _, tournament := range tournaments {
+		// Check if title contains "TEST" or "test"
+		if !includeTestTournaments && (strings.Contains(tournament.Title, "TEST") || strings.Contains(tournament.Title, "test")) {
+			continue
+		}
+		filteredTournaments = append(filteredTournaments, tournament)
+	}
+
 	result := map[string]interface{}{
-		"tournaments": tournaments,
-		"count":       len(tournaments),
+		"tournaments": filteredTournaments,
+		"count":       len(filteredTournaments),
+	}
+
+	// Add a note if any tournaments were filtered
+	if len(tournaments) > len(filteredTournaments) {
+		result["note"] = fmt.Sprintf("%d test tournament(s) filtered out. Use include_test_tournaments=true to show all.", len(tournaments)-len(filteredTournaments))
 	}
 
 	jsonData, err := json.MarshalIndent(result, "", "  ")

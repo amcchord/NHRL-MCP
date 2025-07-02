@@ -99,7 +99,7 @@ func getBracket(args map[string]interface{}) (string, error) {
 		for _, p := range players {
 			if player, ok := p.(map[string]interface{}); ok {
 				if id, ok := player["id"].(string); ok {
-					// Enrich player data
+					// Enrich player data with profile details and NHRL stats
 					enrichedPlayer := enrichPlayerDataWithProfileDetails(player)
 					playerMap[id] = enrichedPlayer
 				}
@@ -336,6 +336,20 @@ func getBracketStandings(args map[string]interface{}) (string, error) {
 					standing["tag"] = tag
 				}
 
+				// Add NHRL stats if available
+				if nhrlRank, ok := enrichedPlayer["nhrl_rank"]; ok {
+					standing["nhrl_rank"] = nhrlRank
+				}
+				if nhrlStreak, ok := enrichedPlayer["nhrl_current_streak"]; ok {
+					standing["nhrl_current_streak"] = nhrlStreak
+				}
+				if nhrlRecentFights, ok := enrichedPlayer["nhrl_recent_fights"]; ok {
+					standing["nhrl_recent_fights"] = nhrlRecentFights
+				}
+				if nhrlLastFightDate, ok := enrichedPlayer["nhrl_last_fight_date"]; ok {
+					standing["nhrl_last_fight_date"] = nhrlLastFightDate
+				}
+
 				standings = append(standings, standing)
 			}
 		}
@@ -422,6 +436,13 @@ func enrichGameForBracket(game map[string]interface{}, playerMap map[string]map[
 						enrichedSlot["displayName"] = player["displayName"]
 						if seed, ok := player["seed"]; ok {
 							enrichedSlot["seed"] = seed
+						}
+						// Add NHRL stats if available
+						if nhrlRank, ok := player["nhrl_rank"]; ok {
+							enrichedSlot["nhrl_rank"] = nhrlRank
+						}
+						if nhrlStreak, ok := player["nhrl_current_streak"]; ok {
+							enrichedSlot["nhrl_current_streak"] = nhrlStreak
 						}
 					}
 				}

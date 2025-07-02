@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# TrueFinals MCP Server Test Installation Script
+# NHRL MCP Server Test Installation Script v1.1
 # This script installs the current platform version of the MCP server to /usr/local/bin
 # Only use this script for testing purposes
 
@@ -34,7 +34,7 @@ log_error() {
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 BUILD_DIR="$PROJECT_DIR/build"
-BINARY_NAME="truefinals-mcp-server"
+BINARY_NAME="nhrl-mcp-server"
 INSTALL_DIR="/usr/local/bin"
 
 # Function to detect current platform
@@ -56,8 +56,8 @@ detect_platform() {
 
 # Main installation function
 main() {
-    log_info "TrueFinals MCP Server Test Installation"
-    echo "======================================="
+    log_info "NHRL MCP Server Test Installation v1.1"
+    echo "========================================"
 
     # Check if running as root
     if [ "$EUID" -ne 0 ]; then
@@ -159,11 +159,11 @@ main() {
         echo "  $BINARY_NAME -api-user-id <id> -api-key <key>  # Run with credentials"
         echo
         log_info "Environment variables:"
-        echo "  TRUEFINALS_API_USER_ID    # TrueFinals API User ID"
-        echo "  TRUEFINALS_API_KEY        # TrueFinals API Key"
+        echo "  NHRL_API_USER_ID    # NHRL API User ID"
+        echo "  NHRL_API_KEY        # NHRL API Key"
         echo
         log_info "Test with dummy credentials:"
-        echo "  TRUEFINALS_API_USER_ID=test TRUEFINALS_API_KEY=test $BINARY_NAME -exit-after-first"
+        echo "  NHRL_API_USER_ID=test NHRL_API_KEY=test $BINARY_NAME -exit-after-first"
         
     else
         log_error "Installation failed - binary not executable"
@@ -174,7 +174,7 @@ main() {
 # Handle command line arguments
 case "${1:-}" in
     --help|-h)
-        echo "TrueFinals MCP Server Test Installation Script"
+        echo "NHRL MCP Server Test Installation Script v1.1"
         echo
         echo "Usage: sudo $0"
         echo
