@@ -115,6 +115,37 @@ type NHRLStreakStats struct {
 	LongestLoseStreak int    `json:"longest_lose_streak"`
 }
 
+// NHRLLiveFightStats represents live fight statistics between two bots
+type NHRLLiveFightStats struct {
+	DriverName          string  `json:"driver_name"`
+	DriverPronunciation string  `json:"driver_pronunciation"`
+	City                string  `json:"city"`
+	StateProvince       string  `json:"state_province"`
+	Country             string  `json:"country"`
+	Pronouns            string  `json:"pronouns"`
+	TeamName            *string `json:"team_name"`
+	BotName             string  `json:"bot_name"`
+	BotPronunciation    *string `json:"bot_pronunciation"`
+	Ranking             int     `json:"ranking"`
+	Events              int     `json:"events"`
+	Fights              int     `json:"fights"`
+	W                   int     `json:"w"`
+	L                   int     `json:"l"`
+	WKO                 int     `json:"w_ko"`
+	LKO                 int     `json:"l_ko"`
+	WJD                 int     `json:"w_jd"`
+	LJD                 int     `json:"l_jd"`
+	WinPct              string  `json:"win_pct"`
+	BuilderBackground   string  `json:"builder_background"`
+	InterestingFact     string  `json:"interesting_fact"`
+	InterestingFact2    *string `json:"interesting_fact_2"`
+	BotType             string  `json:"bot_type"`
+	HthW                int     `json:"hth_w"`        // Head-to-head wins against opponent
+	HthWKO              int     `json:"hth_w_ko"`     // Head-to-head KO wins against opponent
+	HthWJD              int     `json:"hth_w_jd"`     // Head-to-head JD wins against opponent
+	LastMeeting         *string `json:"last_meeting"` // Last meeting date with opponent
+}
+
 // BrettZone Tournament Match data structures
 type BrettZoneMatch struct {
 	TournamentID   string `json:"tournamentID"`
@@ -429,6 +460,55 @@ func getNHRLStreakStats(botName string) (*NHRLStreakStats, error) {
 	}
 
 	return &result, nil
+}
+
+// Get live fight stats between two bots for a specific tournament
+func getNHRLLiveFightStats(bot1, bot2, tournamentID string) ([]NHRLLiveFightStats, error) {
+	// Build form data
+	formData := url.Values{}
+	formData.Set("bot1", bot1)
+	formData.Set("bot2", bot2)
+
+	// Build full URL with tournament ID
+	fullURL := fmt.Sprintf("https://stats.nhrl.io/live_stats/query/get_fight_stats.php?tournament_id=%s", tournamentID)
+
+	req, err := http.NewRequest("POST", fullURL, strings.NewReader(formData.Encode()))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	// Set headers
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("User-Agent", "NHRL-MCP-Server/1.0.0")
+
+	resp, err := nhrlHttpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	responseBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	// Check for HTTP error status codes
+	if resp.StatusCode >= 400 {
+		return nil, fmt.Errorf("HTTP error %d: %s", resp.StatusCode, string(responseBody))
+	}
+
+	// Handle empty response
+	if len(responseBody) == 0 || string(responseBody) == "" {
+		return []NHRLLiveFightStats{}, nil
+	}
+
+	var result []NHRLLiveFightStats
+	if err := json.Unmarshal(responseBody, &result); err != nil {
+		return nil, fmt.Errorf("failed to parse live fight stats response: %w", err)
+	}
+
+	return result, nil
 }
 
 // BrettZone API Functions

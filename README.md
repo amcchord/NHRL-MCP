@@ -119,6 +119,7 @@ Whether you're managing a live tournament or analyzing historical robot combat p
 - `get_bot_stats_by_season` - Get seasonal performance statistics
 - `get_bot_streak_stats` - Get current and longest win/lose streaks
 - `get_bot_event_participants` - Get tournament participation history
+- `get_live_fight_stats` - Get live fight statistics between two bots for a specific tournament
 
 #### Weight Class Operations:
 - `get_weight_class_dumpster_count` - Get podium finishers (1st, 2nd, 3rd place)
@@ -471,4 +472,65 @@ For issues related to:
 ./nhrl-mcp-server -api-user-id "your_user_id" -api-key "your_api_key" -tools full-safe
 ```
 
-This MCP server provides the most comprehensive combat robot tournament and statistics management available for AI assistants, combining live tournament administration with deep historical analytics in a single, powerful tool. 
+This MCP server provides the most comprehensive combat robot tournament and statistics management available for AI assistants, combining live tournament administration with deep historical analytics in a single, powerful tool.
+
+### NHRL Stats Operations
+
+The NHRL stats tool provides access to comprehensive NHRL statsbook data and BrettZone tournament information:
+
+#### Bot-specific Operations:
+- `get_bot_rank` - Get a bot's current ranking
+- `get_bot_fights` - Get all fights for a specific bot
+- `get_bot_head_to_head` - Get head-to-head records against all opponents
+- `get_bot_stats_by_season` - Get seasonal statistics for a bot
+- `get_bot_streak_stats` - Get winning/losing streak information
+- `get_bot_event_participants` - Get all events a bot has participated in
+- `get_live_fight_stats` - Get live fight statistics between two bots for a specific tournament
+
+#### Weight Class Operations:
+- `get_weight_class_dumpster_count` - Get podium finishes by weight class
+- `get_weight_class_event_winners` - Get event winners for a weight class
+- `get_weight_class_fastest_kos` - Get fastest knockouts in a weight class
+- `get_weight_class_longest_streaks` - Get longest winning streaks
+- `get_weight_class_stat_summary` - Get overall statistics summary
+
+#### Tournament Operations:
+- `get_tournament_matches` - Get all matches from a BrettZone tournament
+- `get_match_review_url` - Generate a match review video URL
+- `get_qualification_system` - Get information about NHRL's qualification system
+
+#### Other Operations:
+- `get_random_fight` - Get a random fight from the database
+
+### New Feature: Live Fight Stats
+
+The `get_live_fight_stats` operation provides detailed, up-to-date statistics for a specific bot with head-to-head data against an opponent in a tournament context.
+
+**Parameters:**
+- `bot1` (required): First bot name for comparison
+- `bot2` (required): Second bot name - stats will be returned for this bot
+- `tournament_id` (required): Tournament ID (e.g., 'nhrl_june25_30lb')
+
+**Returns:**
+- Detailed stats for bot2 including:
+  - Driver information (name, pronunciation, location, pronouns)
+  - Bot details (type, ranking, builder background)
+  - Overall fight statistics (wins, losses, KOs, judge decisions)
+  - Head-to-head record against bot1
+  - Last meeting date if applicable
+
+**Example usage:**
+```json
+{
+  "operation": "get_live_fight_stats",
+  "bot1": "MegatRON",
+  "bot2": "Hurricane",
+  "tournament_id": "nhrl_june25_30lb"
+}
+```
+
+This provides more recent statistics than the standard statsbook queries and includes additional driver/builder information.
+
+## Configuration
+
+// ... existing code ... 

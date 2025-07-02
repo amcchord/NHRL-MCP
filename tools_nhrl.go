@@ -49,6 +49,8 @@ func handleNHRLStatsTool(args map[string]interface{}) (string, error) {
 		return getBrettZoneMatchReviewURLTool(args)
 	case "get_qualification_system":
 		return getNHRLQualificationSystemTool(args)
+	case "get_live_fight_stats":
+		return getNHRLLiveFightStatsTool(args)
 	default:
 		return "", fmt.Errorf("unknown operation: %s", operation)
 	}
@@ -70,12 +72,20 @@ func getNHRLStatsToolInfo() ToolInfo {
 						"get_bot_streak_stats", "get_bot_event_participants", "get_weight_class_dumpster_count",
 						"get_weight_class_event_winners", "get_weight_class_fastest_kos", "get_weight_class_longest_streaks",
 						"get_weight_class_stat_summary", "get_random_fight", "get_tournament_matches", "get_match_review_url",
-						"get_qualification_system",
+						"get_qualification_system", "get_live_fight_stats",
 					},
 				},
 				"bot_name": map[string]interface{}{
 					"type":        "string",
 					"description": "Name of the bot (required for bot-specific operations). Spaces will be automatically converted to underscores.",
+				},
+				"bot1": map[string]interface{}{
+					"type":        "string",
+					"description": "First bot name for head-to-head comparison (used with get_live_fight_stats)",
+				},
+				"bot2": map[string]interface{}{
+					"type":        "string",
+					"description": "Second bot name for head-to-head comparison (used with get_live_fight_stats). Stats returned will be for this bot with H2H data against bot1.",
 				},
 				"weight_class": map[string]interface{}{
 					"type":        "string",
@@ -653,6 +663,94 @@ func getNHRLQualificationSystemTool(args map[string]interface{}) (string, error)
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal result: %w", err)
 	}
+	return string(jsonData), nil
+}
+
+// Get live fight stats between two bots
+func getNHRLLiveFightStatsTool(args map[string]interface{}) (string, error) {
+	bot1, ok := args["bot1"].(string)
+	if !ok {
+		return "", fmt.Errorf("bot1 is required for get_live_fight_stats operation")
+	}
+
+	bot2, ok := args["bot2"].(string)
+	if !ok {
+		return "", fmt.Errorf("bot2 is required for get_live_fight_stats operation")
+	}
+
+	tournamentID, ok := args["tournament_id"].(string)
+	if !ok {
+		return "", fmt.Errorf("tournament_id is required for get_live_fight_stats operation")
+	}
+
+	stats, err := getNHRLLiveFightStats(bot1, bot2, tournamentID)
+	if err != nil {
+		return "", fmt.Errorf("failed to get live fight stats: %w", err)
+	}
+
+	// The API returns stats for bot2 with head-to-head data against bot1
+	result := map[string]interface{}{
+		"bot1":          bot1,
+		"bot2":          bot2,
+		"tournament_id": tournamentID,
+		"stats_count":   len(stats),
+	}
+
+	if len(stats) > 0 {
+		// Extract the main bot stats (for bot2)
+		botStats := stats[0]
+		result["bot_stats"] = map[string]interface{}{
+			"bot_name":             botStats.BotName,
+			"driver_name":          botStats.DriverName,
+			"driver_pronunciation": botStats.DriverPronunciation,
+			"city":                 botStats.City,
+			"state_province":       botStats.StateProvince,
+			"country":              botStats.Country,
+			"pronouns":             botStats.Pronouns,
+			"team_name":            botStats.TeamName,
+			"bot_pronunciation":    botStats.BotPronunciation,
+			"ranking":              botStats.Ranking,
+			"bot_type":             botStats.BotType,
+			"builder_background":   botStats.BuilderBackground,
+			"interesting_fact":     botStats.InterestingFact,
+			"interesting_fact_2":   botStats.InterestingFact2,
+		}
+
+		// Overall stats
+		result["overall_stats"] = map[string]interface{}{
+			"events":                botStats.Events,
+			"fights":                botStats.Fights,
+			"wins":                  botStats.W,
+			"losses":                botStats.L,
+			"win_pct":               botStats.WinPct,
+			"knockouts":             botStats.WKO,
+			"knocked_out":           botStats.LKO,
+			"judge_decision_wins":   botStats.WJD,
+			"judge_decision_losses": botStats.LJD,
+		}
+
+		// Head-to-head stats against bot1
+		result["head_to_head"] = map[string]interface{}{
+			"total_wins":          botStats.HthW,
+			"knockout_wins":       botStats.HthWKO,
+			"judge_decision_wins": botStats.HthWJD,
+			"last_meeting":        botStats.LastMeeting,
+		}
+
+		// Add note about head-to-head record
+		if botStats.HthW > 0 || botStats.LastMeeting != nil {
+			// If they've fought, add a note about the wins
+			result["head_to_head_note"] = fmt.Sprintf("%s has %d wins against %s", botStats.BotName, botStats.HthW, bot1)
+		}
+	} else {
+		result["message"] = "No stats found for these bots in the specified tournament"
+	}
+
+	jsonData, err := json.MarshalIndent(result, "", "  ")
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal result: %w", err)
+	}
+
 	return string(jsonData), nil
 }
 
