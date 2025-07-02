@@ -1,7 +1,7 @@
-# TrueFinals MCP Server Makefile
+# NHRL MCP Server Makefile
 
-BINARY_NAME=truefinals-mcp-server
-VERSION=v1.0.0
+BINARY_NAME=nhrl-mcp-server
+VERSION=v1.1.0
 BUILD_DIR=build
 
 # Code signing variables (set these via environment or command line)
@@ -121,8 +121,8 @@ test:
 # Run the server with test credentials (for development)
 .PHONY: test-run
 test-run:
-	@if [ -z "$(TRUEFINALS_API_USER_ID)" ] || [ -z "$(TRUEFINALS_API_KEY)" ]; then \
-		echo "Error: Please set TRUEFINALS_API_USER_ID and TRUEFINALS_API_KEY environment variables"; \
+	@if [ -z "$(NHRL_API_USER_ID)" ] || [ -z "$(NHRL_API_KEY)" ]; then \
+		echo "Error: Please set NHRL_API_USER_ID and NHRL_API_KEY environment variables"; \
 		echo "Or source your environment file: source scripts/dev-env.sh"; \
 		exit 1; \
 	fi
@@ -132,9 +132,9 @@ test-run:
 .PHONY: test-tools
 test-tools:
 	@echo "Testing tools registration..."
-	@if [ -z "$(TRUEFINALS_API_USER_ID)" ] || [ -z "$(TRUEFINALS_API_KEY)" ]; then \
+	@if [ -z "$(NHRL_API_USER_ID)" ] || [ -z "$(NHRL_API_KEY)" ]; then \
 		echo "Warning: API credentials not set, using dummy values for tool testing"; \
-		TRUEFINALS_API_USER_ID=test TRUEFINALS_API_KEY=test go run . -exit-after-first -tools full 2>&1 | grep -E "(tool|Tool)" || true; \
+		NHRL_API_USER_ID=test NHRL_API_KEY=test go run . -exit-after-first -tools full 2>&1 | grep -E "(tool|Tool)" || true; \
 	else \
 		go run . -exit-after-first -tools full 2>&1 | grep -E "(tool|Tool)" || true; \
 	fi
@@ -204,8 +204,8 @@ verify-checksums:
 # Show build info
 .PHONY: info
 info:
-	@echo "TrueFinals MCP Server Build Information"
-	@echo "======================================="
+	@echo "NHRL MCP Server Build Information"
+	@echo "=================================="
 	@echo "Binary Name:     $(BINARY_NAME)"
 	@echo "Version:         $(VERSION)"
 	@echo "Build Directory: $(BUILD_DIR)"
@@ -280,7 +280,7 @@ help:
 	@echo "  make notarize-macos KEYCHAIN_PROFILE='YourKeychainProfile'"
 	@echo ""
 	@echo "Environment Variables:"
-	@echo "  TRUEFINALS_API_USER_ID  - TrueFinals API User ID"
-	@echo "  TRUEFINALS_API_KEY      - TrueFinals API Key"
+	@echo "  NHRL_API_USER_ID  - NHRL API User ID"
+	@echo "  NHRL_API_KEY      - NHRL API Key"
 	@echo "  DEVELOPER_ID            - macOS code signing identity"
 	@echo "  KEYCHAIN_PROFILE        - macOS notarization keychain profile" 

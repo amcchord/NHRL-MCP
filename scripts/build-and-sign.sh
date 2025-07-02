@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Build and Sign Script for TrueFinals MCP Server
+# Build and Sign Script for NHRL MCP Server v1.1
 # This script builds the Go MCP server for all platforms and optionally signs macOS binaries
 
 set -e  # Exit on any error
@@ -9,8 +9,8 @@ set -e  # Exit on any error
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 BUILD_DIR="$PROJECT_DIR/build"
-BINARY_NAME="truefinals-mcp-server"
-VERSION="v1.0.0"
+BINARY_NAME="nhrl-mcp-server"
+VERSION="v1.1.0"
 
 # Color codes for output
 RED='\033[0;31m'
@@ -360,7 +360,7 @@ show_summary() {
     
     if [ -d "$BUILD_DIR" ]; then
         echo "Build artifacts:"
-        ls -la "$BUILD_DIR" | grep -E "truefinals-mcp-server|\.tar\.gz$|\.zip$" || echo "No artifacts found"
+        ls -la "$BUILD_DIR" | grep -E "nhrl-mcp-server|\.tar\.gz$|\.zip$" || echo "No artifacts found"
     fi
     
     echo
@@ -401,7 +401,7 @@ test_functionality() {
         fi
         
         # Test tool registration (with dummy credentials)
-        if TRUEFINALS_API_USER_ID=test TRUEFINALS_API_KEY=test "$test_binary" -exit-after-first -tools full > /dev/null 2>&1; then
+        if NHRL_API_USER_ID=test NHRL_API_KEY=test "$test_binary" -exit-after-first -tools full > /dev/null 2>&1; then
             log_success "✓ Server starts and exits correctly"
         else
             log_warning "✗ Server startup test failed"
@@ -413,7 +413,7 @@ test_functionality() {
 
 # Main execution
 main() {
-    log_info "Starting TrueFinals MCP Server build process..."
+    log_info "Starting NHRL MCP Server build process..."
     
     # Check prerequisites
     check_go
@@ -474,7 +474,7 @@ main() {
 # Handle command line arguments
 case "${1:-}" in
     --help|-h)
-        echo "TrueFinals MCP Server Build Script"
+        echo "NHRL MCP Server Build Script v1.1"
         echo
         echo "Usage: $0 [options]"
         echo
