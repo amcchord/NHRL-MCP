@@ -141,7 +141,7 @@ func isReadOperation(operation string) bool {
 		"get_bot_streak_stats", "get_bot_event_participants", "get_weight_class_dumpster_count",
 		"get_weight_class_event_winners", "get_weight_class_fastest_kos", "get_weight_class_longest_streaks",
 		"get_weight_class_stat_summary", "get_random_fight", "get_tournament_matches",
-		"get_match_review_url", "get_qualification_system",
+		"get_match_review_url", "get_qualification_system", "get_live_fight_stats", "get_bot_picture_url",
 	}
 	for _, op := range readOps {
 		if op == operation {

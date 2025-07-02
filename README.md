@@ -110,7 +110,7 @@ Whether you're managing a live tournament or analyzing historical robot combat p
 ### 6. NHRL Stats Tool ⭐ 
 **Tool Name**: `nhrl_stats`
 
-**Operations** (15 total):
+**Operations** (17 total):
 
 #### Bot-Specific Operations:
 - `get_bot_rank` - Get current bot ranking
@@ -486,6 +486,7 @@ The NHRL stats tool provides access to comprehensive NHRL statsbook data and Bre
 - `get_bot_streak_stats` - Get winning/losing streak information
 - `get_bot_event_participants` - Get all events a bot has participated in
 - `get_live_fight_stats` - Get live fight statistics between two bots for a specific tournament
+- `get_bot_picture_url` - Get bot picture URLs (thumbnail and full size) from BrettZone
 
 #### Weight Class Operations:
 - `get_weight_class_dumpster_count` - Get podium finishes by weight class
