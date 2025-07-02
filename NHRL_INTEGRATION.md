@@ -23,6 +23,7 @@ All existing TrueFinals tournament management tools remain available and have be
 - `get_bot_stats_by_season` - Get seasonal statistics for a bot
 - `get_bot_streak_stats` - Get current win/lose streak information
 - `get_bot_event_participants` - Get tournament participation history
+- `get_bot_picture_url` - Get bot picture URLs (thumbnail and full size) from BrettZone
 
 #### Weight Class Operations
 - `get_weight_class_dumpster_count` - Get podium finishers (1st/2nd/3rd place) for a weight class
@@ -95,6 +96,7 @@ Whenever player data is returned (in any TrueFinals tool), you'll automatically 
 - **nhrl_current_streak** - Current win/lose streak with length and type
 - **nhrl_recent_fights** - Number of recent fights (last 5)
 - **nhrl_last_fight_date** - Date of most recent NHRL fight
+- **bot_picture** - Bot picture URLs (thumbnail_url and full_size_url) from BrettZone
 
 #### Tournament Enrichment
 When you query tournaments through the TrueFinals tools, the data is automatically enhanced with:
@@ -133,6 +135,27 @@ Bracket views and standings include full NHRL stats:
     "operation": "get_bot_rank",
     "bot_name": "Silent Spring"
   }
+}
+```
+
+### Get Bot Picture URLs
+```json
+{
+  "name": "nhrl_stats",
+  "arguments": {
+    "operation": "get_bot_picture_url",
+    "bot_name": "Overlord"
+  }
+}
+```
+
+Returns:
+```json
+{
+  "bot_name": "Overlord",
+  "thumbnail_url": "https://brettzone.nhrl.io/brettZone/getBotPic.php?bot=Overlord&thumb",
+  "full_size_url": "https://brettzone.nhrl.io/brettZone/getBotPic.php?bot=Overlord",
+  "note": "These URLs return PNG images. The thumbnail is smaller and loads faster."
 }
 ```
 

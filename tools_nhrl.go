@@ -51,6 +51,8 @@ func handleNHRLStatsTool(args map[string]interface{}) (string, error) {
 		return getNHRLQualificationSystemTool(args)
 	case "get_live_fight_stats":
 		return getNHRLLiveFightStatsTool(args)
+	case "get_bot_picture_url":
+		return getNHRLBotPictureURLTool(args)
 	default:
 		return "", fmt.Errorf("unknown operation: %s", operation)
 	}
@@ -72,7 +74,7 @@ func getNHRLStatsToolInfo() ToolInfo {
 						"get_bot_streak_stats", "get_bot_event_participants", "get_weight_class_dumpster_count",
 						"get_weight_class_event_winners", "get_weight_class_fastest_kos", "get_weight_class_longest_streaks",
 						"get_weight_class_stat_summary", "get_random_fight", "get_tournament_matches", "get_match_review_url",
-						"get_qualification_system", "get_live_fight_stats",
+						"get_qualification_system", "get_live_fight_stats", "get_bot_picture_url",
 					},
 				},
 				"bot_name": map[string]interface{}{
@@ -617,6 +619,13 @@ func enrichPlayerWithNHRLStats(player map[string]interface{}) map[string]interfa
 				"type":   streakStats.CurrentStreakType,
 			}
 		}
+
+		// Add bot picture URLs
+		formattedBotName := strings.ReplaceAll(botName, " ", "_")
+		enrichedPlayer["bot_picture"] = map[string]interface{}{
+			"thumbnail_url": fmt.Sprintf("https://brettzone.nhrl.io/brettZone/getBotPic.php?bot=%s&thumb", formattedBotName),
+			"full_size_url": fmt.Sprintf("https://brettzone.nhrl.io/brettZone/getBotPic.php?bot=%s", formattedBotName),
+		}
 	}
 
 	return enrichedPlayer
@@ -696,6 +705,23 @@ func getNHRLLiveFightStatsTool(args map[string]interface{}) (string, error) {
 		"stats_count":   len(stats),
 	}
 
+	// Add bot picture URLs for both bots
+	bot1Formatted := strings.ReplaceAll(bot1, " ", "_")
+	bot2Formatted := strings.ReplaceAll(bot2, " ", "_")
+
+	result["bot_pictures"] = map[string]interface{}{
+		"bot1": map[string]interface{}{
+			"name":          bot1,
+			"thumbnail_url": fmt.Sprintf("https://brettzone.nhrl.io/brettZone/getBotPic.php?bot=%s&thumb", bot1Formatted),
+			"full_size_url": fmt.Sprintf("https://brettzone.nhrl.io/brettZone/getBotPic.php?bot=%s", bot1Formatted),
+		},
+		"bot2": map[string]interface{}{
+			"name":          bot2,
+			"thumbnail_url": fmt.Sprintf("https://brettzone.nhrl.io/brettZone/getBotPic.php?bot=%s&thumb", bot2Formatted),
+			"full_size_url": fmt.Sprintf("https://brettzone.nhrl.io/brettZone/getBotPic.php?bot=%s", bot2Formatted),
+		},
+	}
+
 	if len(stats) > 0 {
 		// Extract the main bot stats (for bot2)
 		botStats := stats[0]
@@ -744,6 +770,35 @@ func getNHRLLiveFightStatsTool(args map[string]interface{}) (string, error) {
 		}
 	} else {
 		result["message"] = "No stats found for these bots in the specified tournament"
+	}
+
+	jsonData, err := json.MarshalIndent(result, "", "  ")
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal result: %w", err)
+	}
+
+	return string(jsonData), nil
+}
+
+// Get bot picture URL
+func getNHRLBotPictureURLTool(args map[string]interface{}) (string, error) {
+	botName, ok := args["bot_name"].(string)
+	if !ok {
+		return "", fmt.Errorf("bot_name is required for get_bot_picture_url operation")
+	}
+
+	// Convert spaces to underscores in bot name
+	formattedBotName := strings.ReplaceAll(botName, " ", "_")
+
+	// Generate the picture URLs
+	thumbnailURL := fmt.Sprintf("https://brettzone.nhrl.io/brettZone/getBotPic.php?bot=%s&thumb", formattedBotName)
+	fullSizeURL := fmt.Sprintf("https://brettzone.nhrl.io/brettZone/getBotPic.php?bot=%s", formattedBotName)
+
+	result := map[string]interface{}{
+		"bot_name":      botName,
+		"thumbnail_url": thumbnailURL,
+		"full_size_url": fullSizeURL,
+		"note":          "These URLs return PNG images. The thumbnail is smaller and loads faster.",
 	}
 
 	jsonData, err := json.MarshalIndent(result, "", "  ")

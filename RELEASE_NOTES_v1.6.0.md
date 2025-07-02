@@ -138,6 +138,22 @@ The new `get_live_fight_stats` operation:
 ### 🙏 Acknowledgments
 Special thanks to the NHRL team for providing access to live data feeds and supporting the integration of real-time statistics.
 
+### Enhanced Data Enrichment
+- Tournament match data now includes enriched player information with NHRL stats
+- Added automatic qualification path context to tournament matches
+- Match review URL generation for easy video access
+
+### New Bot Picture Functionality
+- Added `get_bot_picture_url` operation to retrieve bot images from BrettZone
+- Automatically enriches player data with bot picture URLs (thumbnail and full size)
+- Bot names with spaces are automatically converted to underscores for URL compatibility
+- Picture URLs are included in:
+  - Direct bot picture queries
+  - Tournament player data (enriched automatically)
+  - Live fight stats for both competing bots
+
+## API Updates
+
 ---
 
 **Full Changelog**: https://github.com/amcchord/NHRL-MCP/compare/v1.5.0...v1.6.0 
