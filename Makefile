@@ -1,7 +1,7 @@
 # NHRL MCP Server Makefile
 
 BINARY_NAME=nhrl-mcp-server
-VERSION=v1.8.0
+VERSION=v1.8.1
 BUILD_DIR=build
 
 # Code signing variables (set these via environment or command line)
