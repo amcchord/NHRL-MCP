@@ -397,7 +397,7 @@ func getNHRLBotRank(botName string) (*NHRLRanking, error) {
 func getNHRLStatSummary(categoryID, seasonID string) ([]NHRLStatSummary, error) {
 	params := map[string]string{
 		"category_id": categoryID,
-		"season_id":   seasonID,
+		"season":      seasonID,
 	}
 
 	data, err := makeNHRLAPIRequest("get_stat_summary.php", params)
@@ -433,10 +433,10 @@ func getNHRLStatSummarySimple(categoryID string) ([]NHRLStatSummary, error) {
 }
 
 // Get stats by season for a specific bot
-func getNHRLStatsBySeason(botName, seasonID string) (*NHRLBotStatsBySeason, error) {
+func getNHRLStatsBySeason(botName, season string) (*NHRLBotStatsBySeason, error) {
 	params := map[string]string{
 		"bot_name": normalizeBotName(botName),
-		"season":   seasonID, // Changed from season_id to season per documentation
+		"season":   season,
 	}
 
 	data, err := makeNHRLAPIRequest("get_stats_by_season.php", params)
