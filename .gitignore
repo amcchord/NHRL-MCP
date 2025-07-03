@@ -29,6 +29,9 @@ truefinals-mcp-server-*
 # Development environment (contains credentials)
 scripts/dev-env.sh
 scripts/release-env.sh
+.env
+.env.local
+.env.*.local
 
 # Logs
 *.log

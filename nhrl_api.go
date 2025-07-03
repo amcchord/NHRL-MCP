@@ -413,11 +413,30 @@ func getNHRLStatSummary(categoryID, seasonID string) ([]NHRLStatSummary, error) 
 	return result, nil
 }
 
+// Get simple stat summary for a weight class (all-time stats)
+func getNHRLStatSummarySimple(categoryID string) ([]NHRLStatSummary, error) {
+	params := map[string]string{
+		"category_id": categoryID,
+	}
+
+	data, err := makeNHRLAPIRequest("get_stat_summary_simple.php", params)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get simple stat summary: %w", err)
+	}
+
+	var result []NHRLStatSummary
+	if err := json.Unmarshal(data, &result); err != nil {
+		return nil, fmt.Errorf("failed to parse simple stat summary response: %w", err)
+	}
+
+	return result, nil
+}
+
 // Get stats by season for a specific bot
 func getNHRLStatsBySeason(botName, seasonID string) (*NHRLBotStatsBySeason, error) {
 	params := map[string]string{
-		"bot_name":  normalizeBotName(botName),
-		"season_id": seasonID,
+		"bot_name": normalizeBotName(botName),
+		"season":   seasonID, // Changed from season_id to season per documentation
 	}
 
 	data, err := makeNHRLAPIRequest("get_stats_by_season.php", params)
@@ -627,24 +646,21 @@ func getWeightClassCategoryID(weightClass string) string {
 
 // Helper function to get season ID from season name/year
 func getSeasonID(season string) string {
-	switch strings.ToLower(season) {
-	case "current", "0":
-		return "0"
-	case "all-time", "all time", "alltime", "1":
-		return "1"
-	case "2018-2019", "2018", "2019", "2":
-		return "2"
-	case "2020", "3":
-		return "3"
-	case "2021", "4":
-		return "4"
-	case "2022", "5":
-		return "5"
-	case "2023", "6":
-		return "6"
-	default:
-		return "1" // Default to all-time
+	// Map user-friendly season names to API expected values
+	seasonMap := map[string]string{
+		"current":   time.Now().Format("2006"), // Current year
+		"all-time":  "All-time",
+		"2018-2019": "2018-19",
+		"active":    "Active",
 	}
+
+	// Check if we have a mapping
+	if mappedSeason, ok := seasonMap[strings.ToLower(season)]; ok {
+		return mappedSeason
+	}
+
+	// If it's a year, return as-is
+	return season
 }
 
 // Tournament Round Information

@@ -85,6 +85,8 @@ func handleNHRLStatsTool(args map[string]interface{}) (string, error) {
 		return getNHRLWeightClassLongestStreaksTool(args)
 	case "get_weight_class_stat_summary":
 		return getNHRLWeightClassStatSummaryTool(args)
+	case "get_weight_class_stat_summary_simple":
+		return getNHRLWeightClassStatSummarySimpleTool(args)
 	case "get_random_fight":
 		return getNHRLRandomFightTool(args)
 	case "get_tournament_matches":
@@ -126,7 +128,7 @@ Use this tool when you need historical data, performance statistics, or current 
 					"description": `The specific NHRL stats operation to perform:
 
 BOT-SPECIFIC OPERATIONS (require bot_name):
-- get_bot_rank: Get current Elo ranking and rank position for a specific bot
+- get_bot_rank: Get current ranking (based on Active season - previous + current season performance)
 - get_bot_fights: Get complete fight history with dates, opponents, results, and methods
 - get_bot_head_to_head: Get win/loss records against all opponents the bot has faced
 - get_bot_stats_by_season: Get wins, losses, KOs, and other stats for a specific season
@@ -139,7 +141,11 @@ WEIGHT CLASS OPERATIONS (use weight_class parameter):
 - get_weight_class_event_winners: List tournament winners with dates and events
 - get_weight_class_fastest_kos: Leaderboard of fastest knockout times
 - get_weight_class_longest_streaks: Bots with longest winning streaks
-- get_weight_class_stat_summary: Overall statistics for all bots in the weight class
+- get_weight_class_stat_summary: Get statistics and rankings for all bots in the weight class
+  * Use season="Active" for CURRENT RANKINGS (recommended for ranking queries)
+  * Use season="all-time" for historical all-time statistics
+  * Use specific year (e.g., "2024") for that season's statistics
+- get_weight_class_stat_summary_simple: All-time statistics only (not recommended for current rankings)
 
 TOURNAMENT/MATCH OPERATIONS:
 - get_tournament_matches: Get all matches from a BrettZone tournament with results and bracket info
@@ -153,7 +159,7 @@ GENERAL OPERATIONS:
 						"get_bot_rank", "get_bot_fights", "get_bot_head_to_head", "get_bot_stats_by_season",
 						"get_bot_streak_stats", "get_bot_event_participants", "get_weight_class_dumpster_count",
 						"get_weight_class_event_winners", "get_weight_class_fastest_kos", "get_weight_class_longest_streaks",
-						"get_weight_class_stat_summary", "get_random_fight", "get_tournament_matches", "get_match_review_url",
+						"get_weight_class_stat_summary", "get_weight_class_stat_summary_simple", "get_random_fight", "get_tournament_matches", "get_match_review_url",
 						"get_qualification_system", "get_live_fight_stats", "get_bot_picture_url",
 					},
 				},
@@ -175,9 +181,16 @@ GENERAL OPERATIONS:
 					"enum":        []string{"3lb", "12lb", "30lb", "beetleweight", "antweight", "hobbyweight"},
 				},
 				"season": map[string]interface{}{
-					"type":        "string",
-					"description": "Season for stats query. Use 'current' for ongoing season, 'all-time' for complete history, or specific years like '2023', '2022', etc.",
-					"enum":        []string{"current", "all-time", "2018-2019", "2020", "2021", "2022", "2023"},
+					"type": "string",
+					"description": `Season for stats query:
+- "Active": CURRENT RANKINGS based on previous + current season (use this for ranking queries!)
+- "all-time": Complete historical statistics
+- "current": Current year only
+- Specific years: "2025", "2024", "2023", etc.
+- Special: "2018-19" for NHRL's first season that spanned two years
+
+IMPORTANT: Use "Active" when you want current rankings, not "all-time"!`,
+					"enum": []string{"Active", "current", "all-time", "2018-19", "2020", "2021", "2022", "2023", "2024", "2025"},
 				},
 				"tournament_id": map[string]interface{}{
 					"type":        "string",
@@ -636,6 +649,50 @@ func getNHRLWeightClassStatSummaryTool(args map[string]interface{}) (string, err
 		"bot_count":    len(paginatedStats),
 		"stats":        paginatedStats,
 		"pagination":   metadata,
+	}
+
+	jsonData, err := json.MarshalIndent(result, "", "  ")
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal result: %w", err)
+	}
+
+	return string(jsonData), nil
+}
+
+// Get weight class stat summary simple (all-time stats with correct ranking)
+func getNHRLWeightClassStatSummarySimpleTool(args map[string]interface{}) (string, error) {
+	weightClass := "3lb"
+	if wc, ok := args["weight_class"].(string); ok {
+		weightClass = wc
+	}
+	categoryID := getWeightClassCategoryID(weightClass)
+
+	// Get pagination parameters
+	limit := 25
+	if l, ok := args["limit"].(float64); ok {
+		limit = int(l)
+	}
+
+	offset := 0
+	if o, ok := args["offset"].(float64); ok {
+		offset = int(o)
+	}
+
+	statSummary, err := getNHRLStatSummarySimple(categoryID)
+	if err != nil {
+		return "", fmt.Errorf("failed to get weight class stat summary simple: %w", err)
+	}
+
+	// Apply pagination
+	paginatedStats, metadata := paginateSlice(statSummary, limit, offset)
+
+	result := map[string]interface{}{
+		"weight_class": weightClass,
+		"season":       "all-time",
+		"bot_count":    len(paginatedStats),
+		"stats":        paginatedStats,
+		"pagination":   metadata,
+		"note":         "This endpoint provides all-time stats with correct ranking for the weight class",
 	}
 
 	jsonData, err := json.MarshalIndent(result, "", "  ")

@@ -114,7 +114,7 @@ func isOperationAllowed(toolName, operation string) bool {
 func isReadOnlyTool(toolName string) bool {
 	readOnlyTools := []string{
 		"truefinals_tournaments", "truefinals_games", "truefinals_locations", "truefinals_players", "truefinals_bracket",
-		"nhrl_stats",
+		"nhrl_stats", "nhrl_wiki",
 	}
 	for _, tool := range readOnlyTools {
 		if tool == toolName {
@@ -142,6 +142,8 @@ func isReadOperation(operation string) bool {
 		"get_weight_class_event_winners", "get_weight_class_fastest_kos", "get_weight_class_longest_streaks",
 		"get_weight_class_stat_summary", "get_random_fight", "get_tournament_matches",
 		"get_match_review_url", "get_qualification_system", "get_live_fight_stats", "get_bot_picture_url",
+		// NHRL wiki read operations
+		"search", "get_page", "get_page_extract",
 	}
 	for _, op := range readOps {
 		if op == operation {
@@ -508,6 +510,20 @@ func handleToolCall(request MCPRequest) MCPResponse {
 			}
 		}
 
+	case "nhrl_wiki":
+		data, err := handleNHRLWikiTool(args)
+		if err != nil {
+			result = ToolResult{
+				Content: []ToolContent{{Type: "text", Text: fmt.Sprintf("Error: %v", err)}},
+				IsError: true,
+			}
+		} else {
+			result = ToolResult{
+				Content: []ToolContent{{Type: "text", Text: data}},
+				IsError: false,
+			}
+		}
+
 	default:
 		return sendError(request.ID, -32601, fmt.Sprintf("Unknown tool: %s", name), nil)
 	}
@@ -556,6 +572,9 @@ func getAllTools() []ToolInfo {
 	}
 	if isToolAllowed("nhrl_stats") {
 		tools = append(tools, getNHRLStatsToolInfo())
+	}
+	if isToolAllowed("nhrl_wiki") {
+		tools = append(tools, getNHRLWikiToolInfo())
 	}
 
 	return tools

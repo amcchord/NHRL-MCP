@@ -38,6 +38,30 @@ DEVELOPER_ID='...' KEYCHAIN_PROFILE='profile' ENABLE_NOTARIZATION=true ./scripts
 - `--verify-only` - Only verify existing builds
 - `--test-only` - Only test functionality
 
+#### `build-and-notarize.sh`
+A comprehensive build script that builds binaries for all platforms and notarizes macOS binaries using Apple ID credentials.
+
+**Features:**
+- Builds for all supported platforms (Linux, macOS, Windows on both AMD64 and ARM64)
+- Code signs macOS binaries (ad-hoc or with Developer ID)
+- Notarizes macOS binaries with Apple
+- Creates release packages (.tar.gz for Unix, .zip for Windows)
+- Generates SHA256 checksums
+
+**Usage:**
+```bash
+# First time setup - create credentials file
+./setup-credentials.sh
+
+# Build and notarize
+./build-and-notarize.sh
+```
+
+**Security:**
+- Credentials are stored in `scripts/.env` (ignored by git)
+- The .env file has 600 permissions (owner read/write only)
+- Never commit credentials to version control
+
 ### 🧪 Test Scripts
 
 #### `test-functionality.sh`
@@ -64,22 +88,19 @@ Comprehensive functionality testing script.
 ### 📦 Installation Scripts
 
 #### `install_for_test.sh`
-Installs the MCP server to `/usr/local/bin` for testing purposes.
+Builds and installs the NHRL MCP Server to `/usr/local/bin` for testing purposes.
 
-**Features:**
-- Platform detection
-- Automatic binary selection
-- Permission handling
-- Installation verification
+**What it does:**
+1. Builds all binaries using `build-and-notarize.sh`
+2. Detects your current platform
+3. Installs the appropriate binary to `/usr/local/bin`
 
 **Usage:**
 ```bash
-# Install for testing (requires sudo)
-sudo ./scripts/install_for_test.sh
-
-# Help
-./scripts/install_for_test.sh --help
+sudo ./install_for_test.sh
 ```
+
+**Note:** Requires sudo access to install to `/usr/local/bin`
 
 ### ⚙️ Configuration
 

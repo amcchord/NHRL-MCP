@@ -32,6 +32,7 @@ Whether you're managing a live tournament or analyzing historical robot combat p
 - **Live Tournament Data**: Real-time match information from BrettZone system
 - **Video Integration**: Direct links to match review videos with timestamp control
 - **Qualification System**: Understanding NHRL tournament qualification paths
+- **Wiki Integration**: Search and browse NHRL wiki for rules, regulations, and technical information
 
 ## Available Tools
 
@@ -111,6 +112,14 @@ Whether you're managing a live tournament or analyzing historical robot combat p
 **Tool Name**: `nhrl_stats`
 
 **Operations** (17 total):
+
+### 7. NHRL Wiki Tool 📚
+**Tool Name**: `nhrl_wiki`
+
+**Operations** (3 total):
+- `search` - Search for wiki pages by keywords
+- `get_page` - Get the full content of a specific wiki page
+- `get_page_extract` - Get a plain text extract/summary of a wiki page
 
 #### Bot-Specific Operations:
 - `get_bot_rank` - Get current bot ranking
@@ -352,6 +361,12 @@ Once configured, you can ask Claude questions like:
 - "What are the fastest KOs in the 3lb weight class?"
 - "Get the current tournament matches for nhrl_june25_30lb"
 
+**NHRL Wiki Examples:**
+- "Search the NHRL wiki for weight class specifications"
+- "Get the wiki page about safety requirements"
+- "Find information about robot building rules in the wiki"
+- "What does the wiki say about tournament qualification?"
+
 **TrueFinals Tournament Management Examples:**
 - "Create a new 3lb tournament for this weekend"
 - "List all games in tournament T123 and their current status"
@@ -448,6 +463,13 @@ For issues related to:
 
 ## Version History
 
+- **v1.9.0**: Added NHRL Wiki Integration
+  - Added `nhrl_wiki` tool with 3 operations
+  - Search functionality for finding relevant wiki pages
+  - Page content retrieval for reading full articles
+  - Page extract functionality for quick summaries
+  - Integrated MediaWiki API for accessing https://wiki.nhrl.io
+  
 - **v1.0.0**: Initial hybrid release
   - 6 integrated tools with 61 total operations
   - Complete TrueFinals tournament management (48 operations)

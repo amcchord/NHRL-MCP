@@ -157,6 +157,7 @@ install: build
 # Install for testing (current platform only)
 .PHONY: install-test
 install-test:
+	@echo "Note: This will build and notarize binaries before installing"
 	./scripts/install_for_test.sh
 
 # Create release packages
@@ -263,7 +264,7 @@ help:
 	@echo "  clean              - Remove all build artifacts"
 	@echo "  run                - Run the server locally"
 	@echo "  install            - Install to system PATH"
-	@echo "  install-test       - Install for testing (current platform only)"
+	@echo "  install-test       - Build, notarize, and install for testing (current platform)"
 	@echo "  release            - Create release packages"
 	@echo "  release-signed     - Create signed release packages"
 	@echo "  checksums          - Generate SHA256 checksums for release packages"
