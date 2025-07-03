@@ -6,6 +6,50 @@ import (
 	"strings"
 )
 
+// paginateSlice applies pagination to any slice and returns the paginated slice along with metadata
+func paginateSlice[T any](items []T, limit, offset int) ([]T, map[string]interface{}) {
+	// Default limit to 25 if not specified or invalid
+	if limit <= 0 {
+		limit = 25
+	}
+
+	// Default offset to 0 if negative
+	if offset < 0 {
+		offset = 0
+	}
+
+	totalCount := len(items)
+
+	// Handle empty slice or offset beyond bounds
+	if totalCount == 0 || offset >= totalCount {
+		return []T{}, map[string]interface{}{
+			"total_count": totalCount,
+			"limit":       limit,
+			"offset":      offset,
+			"has_more":    false,
+		}
+	}
+
+	// Calculate end index
+	end := offset + limit
+	if end > totalCount {
+		end = totalCount
+	}
+
+	// Slice the items
+	paginatedItems := items[offset:end]
+
+	// Create metadata
+	metadata := map[string]interface{}{
+		"total_count": totalCount,
+		"limit":       limit,
+		"offset":      offset,
+		"has_more":    end < totalCount,
+	}
+
+	return paginatedItems, metadata
+}
+
 // handleNHRLStatsTool handles all NHRL stats operations
 func handleNHRLStatsTool(args map[string]interface{}) (string, error) {
 	operation, ok := args["operation"].(string)
@@ -155,6 +199,14 @@ GENERAL OPERATIONS:
 					"type":        "string",
 					"description": "NHRL qualification round code to get detailed information about. Options: 'Q1' (Opening round), 'Q2W' (The Cusp - for Q1 winners), 'Q2L' (Redemption - for Q1 losers), 'Q3' (Bubble - final qualifying round).",
 				},
+				"limit": map[string]interface{}{
+					"type":        "number",
+					"description": "Maximum number of results to return. Defaults to 25. Use with offset for pagination. Applicable to operations that return lists of data (weight class stats, fight history, etc.).",
+				},
+				"offset": map[string]interface{}{
+					"type":        "number",
+					"description": "Number of results to skip before returning data. Defaults to 0. Use with limit for pagination. For example, limit=25&offset=25 returns results 26-50.",
+				},
 			},
 			"required": []string{"operation"},
 		},
@@ -197,15 +249,30 @@ func getNHRLBotFightsTool(args map[string]interface{}) (string, error) {
 		return "", fmt.Errorf("bot_name is required for get_bot_fights operation")
 	}
 
+	// Get pagination parameters
+	limit := 25
+	if l, ok := args["limit"].(float64); ok {
+		limit = int(l)
+	}
+
+	offset := 0
+	if o, ok := args["offset"].(float64); ok {
+		offset = int(o)
+	}
+
 	fights, err := getNHRLFights(botName)
 	if err != nil {
 		return "", fmt.Errorf("failed to get bot fights: %w", err)
 	}
 
+	// Apply pagination
+	paginatedFights, metadata := paginateSlice(fights, limit, offset)
+
 	result := map[string]interface{}{
 		"bot_name":    botName,
-		"fight_count": len(fights),
-		"fights":      fights,
+		"fight_count": len(paginatedFights),
+		"fights":      paginatedFights,
+		"pagination":  metadata,
 	}
 
 	jsonData, err := json.MarshalIndent(result, "", "  ")
@@ -223,15 +290,30 @@ func getNHRLBotHeadToHeadTool(args map[string]interface{}) (string, error) {
 		return "", fmt.Errorf("bot_name is required for get_bot_head_to_head operation")
 	}
 
+	// Get pagination parameters
+	limit := 25
+	if l, ok := args["limit"].(float64); ok {
+		limit = int(l)
+	}
+
+	offset := 0
+	if o, ok := args["offset"].(float64); ok {
+		offset = int(o)
+	}
+
 	headToHead, err := getNHRLHeadToHead(botName)
 	if err != nil {
 		return "", fmt.Errorf("failed to get bot head-to-head: %w", err)
 	}
 
+	// Apply pagination
+	paginatedHeadToHead, metadata := paginateSlice(headToHead, limit, offset)
+
 	result := map[string]interface{}{
 		"bot_name":           botName,
-		"opponent_count":     len(headToHead),
-		"head_to_head_stats": headToHead,
+		"opponent_count":     len(paginatedHeadToHead),
+		"head_to_head_stats": paginatedHeadToHead,
+		"pagination":         metadata,
 	}
 
 	jsonData, err := json.MarshalIndent(result, "", "  ")
@@ -314,15 +396,30 @@ func getNHRLBotEventParticipantsTool(args map[string]interface{}) (string, error
 		return "", fmt.Errorf("bot_name is required for get_bot_event_participants operation")
 	}
 
+	// Get pagination parameters
+	limit := 25
+	if l, ok := args["limit"].(float64); ok {
+		limit = int(l)
+	}
+
+	offset := 0
+	if o, ok := args["offset"].(float64); ok {
+		offset = int(o)
+	}
+
 	participants, err := getNHRLEventParticipants(botName)
 	if err != nil {
 		return "", fmt.Errorf("failed to get bot event participants: %w", err)
 	}
 
+	// Apply pagination
+	paginatedParticipants, metadata := paginateSlice(participants, limit, offset)
+
 	result := map[string]interface{}{
 		"bot_name":    botName,
-		"event_count": len(participants),
-		"events":      participants,
+		"event_count": len(paginatedParticipants),
+		"events":      paginatedParticipants,
+		"pagination":  metadata,
 	}
 
 	jsonData, err := json.MarshalIndent(result, "", "  ")
@@ -341,15 +438,30 @@ func getNHRLWeightClassDumpsterCountTool(args map[string]interface{}) (string, e
 	}
 	categoryID := getWeightClassCategoryID(weightClass)
 
+	// Get pagination parameters
+	limit := 25
+	if l, ok := args["limit"].(float64); ok {
+		limit = int(l)
+	}
+
+	offset := 0
+	if o, ok := args["offset"].(float64); ok {
+		offset = int(o)
+	}
+
 	dumpsterCount, err := getNHRLDumpsterCount(categoryID)
 	if err != nil {
 		return "", fmt.Errorf("failed to get weight class dumpster count: %w", err)
 	}
 
+	// Apply pagination
+	paginatedDumpsterCount, metadata := paginateSlice(dumpsterCount, limit, offset)
+
 	result := map[string]interface{}{
 		"weight_class":           weightClass,
-		"podium_finishers_count": len(dumpsterCount),
-		"podium_finishers":       dumpsterCount,
+		"podium_finishers_count": len(paginatedDumpsterCount),
+		"podium_finishers":       paginatedDumpsterCount,
+		"pagination":             metadata,
 	}
 
 	jsonData, err := json.MarshalIndent(result, "", "  ")
@@ -367,15 +479,30 @@ func getNHRLWeightClassEventWinnersTool(args map[string]interface{}) (string, er
 		weightClass = wc
 	}
 
+	// Get pagination parameters
+	limit := 25
+	if l, ok := args["limit"].(float64); ok {
+		limit = int(l)
+	}
+
+	offset := 0
+	if o, ok := args["offset"].(float64); ok {
+		offset = int(o)
+	}
+
 	eventWinners, err := getNHRLEventWinners(weightClass)
 	if err != nil {
 		return "", fmt.Errorf("failed to get weight class event winners: %w", err)
 	}
 
+	// Apply pagination
+	paginatedEventWinners, metadata := paginateSlice(eventWinners, limit, offset)
+
 	result := map[string]interface{}{
 		"weight_class":  weightClass,
-		"event_count":   len(eventWinners),
-		"event_winners": eventWinners,
+		"event_count":   len(paginatedEventWinners),
+		"event_winners": paginatedEventWinners,
+		"pagination":    metadata,
 	}
 
 	jsonData, err := json.MarshalIndent(result, "", "  ")
@@ -394,15 +521,30 @@ func getNHRLWeightClassFastestKOsTool(args map[string]interface{}) (string, erro
 	}
 	classID := getWeightClassCategoryID(weightClass)
 
+	// Get pagination parameters
+	limit := 25
+	if l, ok := args["limit"].(float64); ok {
+		limit = int(l)
+	}
+
+	offset := 0
+	if o, ok := args["offset"].(float64); ok {
+		offset = int(o)
+	}
+
 	fastestKOs, err := getNHRLFastestKOs(classID)
 	if err != nil {
 		return "", fmt.Errorf("failed to get weight class fastest KOs: %w", err)
 	}
 
+	// Apply pagination
+	paginatedFastestKOs, metadata := paginateSlice(fastestKOs, limit, offset)
+
 	result := map[string]interface{}{
 		"weight_class": weightClass,
-		"ko_count":     len(fastestKOs),
-		"fastest_kos":  fastestKOs,
+		"ko_count":     len(paginatedFastestKOs),
+		"fastest_kos":  paginatedFastestKOs,
+		"pagination":   metadata,
 	}
 
 	jsonData, err := json.MarshalIndent(result, "", "  ")
@@ -421,15 +563,30 @@ func getNHRLWeightClassLongestStreaksTool(args map[string]interface{}) (string, 
 	}
 	categoryID := getWeightClassCategoryID(weightClass)
 
+	// Get pagination parameters
+	limit := 25
+	if l, ok := args["limit"].(float64); ok {
+		limit = int(l)
+	}
+
+	offset := 0
+	if o, ok := args["offset"].(float64); ok {
+		offset = int(o)
+	}
+
 	longestStreaks, err := getNHRLLongestWinningStreak(categoryID)
 	if err != nil {
 		return "", fmt.Errorf("failed to get weight class longest streaks: %w", err)
 	}
 
+	// Apply pagination
+	paginatedLongestStreaks, metadata := paginateSlice(longestStreaks, limit, offset)
+
 	result := map[string]interface{}{
 		"weight_class":    weightClass,
-		"streak_count":    len(longestStreaks),
-		"longest_streaks": longestStreaks,
+		"streak_count":    len(paginatedLongestStreaks),
+		"longest_streaks": paginatedLongestStreaks,
+		"pagination":      metadata,
 	}
 
 	jsonData, err := json.MarshalIndent(result, "", "  ")
@@ -454,16 +611,31 @@ func getNHRLWeightClassStatSummaryTool(args map[string]interface{}) (string, err
 	}
 	seasonID := getSeasonID(season)
 
+	// Get pagination parameters
+	limit := 25
+	if l, ok := args["limit"].(float64); ok {
+		limit = int(l)
+	}
+
+	offset := 0
+	if o, ok := args["offset"].(float64); ok {
+		offset = int(o)
+	}
+
 	statSummary, err := getNHRLStatSummary(categoryID, seasonID)
 	if err != nil {
 		return "", fmt.Errorf("failed to get weight class stat summary: %w", err)
 	}
 
+	// Apply pagination
+	paginatedStats, metadata := paginateSlice(statSummary, limit, offset)
+
 	result := map[string]interface{}{
 		"weight_class": weightClass,
 		"season":       season,
-		"bot_count":    len(statSummary),
-		"stats":        statSummary,
+		"bot_count":    len(paginatedStats),
+		"stats":        paginatedStats,
+		"pagination":   metadata,
 	}
 
 	jsonData, err := json.MarshalIndent(result, "", "  ")
@@ -500,6 +672,17 @@ func getBrettZoneTournamentMatchesTool(args map[string]interface{}) (string, err
 		return "", fmt.Errorf("tournament_id parameter is required")
 	}
 
+	// Get pagination parameters
+	limit := 25
+	if l, ok := args["limit"].(float64); ok {
+		limit = int(l)
+	}
+
+	offset := 0
+	if o, ok := args["offset"].(float64); ok {
+		offset = int(o)
+	}
+
 	matches, err := getBrettZoneLatestMatches(tournamentID)
 	if err != nil {
 		return "", fmt.Errorf("failed to get tournament matches: %w", err)
@@ -508,9 +691,12 @@ func getBrettZoneTournamentMatchesTool(args map[string]interface{}) (string, err
 	// Enrich matches with round qualification information
 	enrichedBrettZoneMatches := enrichBrettZoneMatches(matches)
 
+	// Apply pagination before converting to response format
+	paginatedMatches, metadata := paginateSlice(enrichedBrettZoneMatches, limit, offset)
+
 	// Convert to response format with additional information
-	enrichedMatches := make([]map[string]interface{}, len(enrichedBrettZoneMatches))
-	for i, match := range enrichedBrettZoneMatches {
+	enrichedMatches := make([]map[string]interface{}, len(paginatedMatches))
+	for i, match := range paginatedMatches {
 		enrichedMatch := map[string]interface{}{
 			"tournamentID":     match.TournamentID,
 			"matchID":          match.ID,
@@ -550,9 +736,15 @@ func getBrettZoneTournamentMatchesTool(args map[string]interface{}) (string, err
 	// Sort matches by round and match name for better organization
 	result := map[string]interface{}{
 		"tournamentID":   tournamentID,
-		"tournamentName": matches[0].TournamentName,
-		"totalMatches":   len(matches),
+		"tournamentName": "",
+		"totalMatches":   len(paginatedMatches),
 		"matches":        enrichedMatches,
+		"pagination":     metadata,
+	}
+
+	// Set tournament name if we have at least one match
+	if len(enrichedBrettZoneMatches) > 0 {
+		result["tournamentName"] = enrichedBrettZoneMatches[0].TournamentName
 	}
 
 	jsonData, err := json.MarshalIndent(result, "", "  ")

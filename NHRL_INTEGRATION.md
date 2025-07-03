@@ -125,6 +125,43 @@ Bracket views and standings include full NHRL stats:
 - **all-time** - All historical data
 - **2018-2019** through **2023** - Specific seasons
 
+### Pagination Support
+
+Operations that can return large amounts of data now support pagination with `limit` and `offset` parameters:
+
+- **limit**: Maximum number of results to return (default: 25)
+- **offset**: Number of results to skip before returning data (default: 0)
+
+Paginated operations include:
+- `get_weight_class_stat_summary` - Can return hundreds of bots
+- `get_weight_class_dumpster_count` - Podium finishers list
+- `get_weight_class_event_winners` - Historical tournament winners
+- `get_weight_class_fastest_kos` - KO leaderboard
+- `get_weight_class_longest_streaks` - Winning streak leaderboard
+- `get_bot_fights` - Bot fight history (can be extensive)
+- `get_bot_head_to_head` - Head-to-head records
+- `get_bot_event_participants` - Tournament participation history
+- `get_tournament_matches` - Tournament match listings
+
+Each paginated response includes a `pagination` object with:
+- `total_count`: Total number of items available
+- `limit`: Number of items requested
+- `offset`: Starting position in the result set
+- `has_more`: Boolean indicating if more results exist
+
+Example pagination usage:
+```json
+{
+  "tool": "nhrl_stats",
+  "operation": "get_weight_class_stat_summary",
+  "weight_class": "30lb",
+  "limit": 10,
+  "offset": 20
+}
+```
+
+This would return bots 21-30 from the 30lb weight class rankings.
+
 ## Example Usage
 
 ### Get Bot Rank
