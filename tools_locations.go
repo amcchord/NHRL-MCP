@@ -42,63 +42,71 @@ func handleLocationsTool(args map[string]interface{}) (string, error) {
 // getLocationsToolInfo returns the tool definition for location operations
 func getLocationsToolInfo() ToolInfo {
 	return ToolInfo{
-		Name:        "truefinals_locations",
-		Description: "Manage tournament locations in TrueFinals. Create, update, delete locations, and control games at specific locations.",
+		Name: "truefinals_locations",
+		Description: `Manage tournament venue locations and combat cages in TrueFinals. This tool handles NHRL's multi-cage setup and match assignment system.
+
+NHRL tournaments typically run with 4 combat cages operating simultaneously. This tool manages:
+- Cage/arena assignments for matches
+- Match queuing and scheduling at each cage
+- Real-time match progression at venues
+- Location-specific match controls
+
+Use this tool when you need to:
+- Set up tournament venues and cage configurations
+- Assign matches to specific cages
+- Control match flow at each location
+- View cage queues and upcoming matches
+- Activate matches when cages are ready
+
+Note: NHRL typically uses Cage 1-4 as location identifiers.`,
 		InputSchema: map[string]interface{}{
 			"type": "object",
 			"properties": map[string]interface{}{
 				"operation": map[string]interface{}{
-					"type":        "string",
-					"description": "The operation to perform",
+					"type": "string",
+					"description": `The location operation to perform:
+
+QUERY OPERATIONS:
+- list: Get all locations for a tournament
+- get: Get specific location details and match queue
+
+LOCATION MANAGEMENT (require write access):
+- create: Add a new location/cage to tournament
+- update: Update location settings
+- delete: Remove a location from tournament
+
+MATCH CONTROL AT LOCATIONS:
+- activate_next: Start the next queued match at this location
+- update_queue: Reorder matches in location queue
+- clear_queue: Remove all matches from location queue`,
 					"enum": []string{
-						"list", "get", "add", "update", "delete",
-						"start_game", "stop_game", "update_game_scores",
+						"list", "get", "create", "update", "delete",
+						"activate_next", "update_queue", "clear_queue",
 					},
 				},
 				"tournament_id": map[string]interface{}{
 					"type":        "string",
-					"description": "Tournament ID - required for all operations",
+					"description": "Tournament identifier. Required for all operations. Format: 'nhrl_month##_weightclass'",
 				},
 				"location_id": map[string]interface{}{
 					"type":        "string",
-					"description": "Location ID - required for single location operations",
-				},
-				"idx": map[string]interface{}{
-					"type":        "integer",
-					"description": "Index position for new location",
-					"minimum":     0,
+					"description": "Location/cage identifier. Required for single location operations. For NHRL, typically 'cage1', 'cage2', 'cage3', 'cage4'.",
 				},
 				"name": map[string]interface{}{
 					"type":        "string",
-					"description": "Location name (1-64 characters)",
-					"minLength":   1,
-					"maxLength":   64,
+					"description": "Display name for the location. Examples: 'Cage 1', 'Main Arena', 'Blue Cage'",
 				},
-				"block_active": map[string]interface{}{
-					"type":        "boolean",
-					"description": "Whether to block active games at this location",
-				},
-				"scores": map[string]interface{}{
-					"type":        "array",
-					"description": "Array of scores for updating game scores at location",
-					"items": map[string]interface{}{
-						"anyOf": []interface{}{
-							map[string]interface{}{
-								"type":    "integer",
-								"minimum": 0,
-								"maximum": 5,
-							},
-							map[string]interface{}{
-								"type": "number",
-								"enum": []float64{-1},
-							},
-						},
-					},
-				},
-				"result_annotation": map[string]interface{}{
+				"description": map[string]interface{}{
 					"type":        "string",
-					"description": "Result annotation for game outcome",
-					"enum":        []string{"KO", "TO", "JD", "TKO", "HLD", "BY", "DQ", "FF", "T"},
+					"description": "Optional description of the location. Can include notes about equipment, streaming setup, etc.",
+				},
+				"queue": map[string]interface{}{
+					"type":        "array",
+					"description": "Ordered list of match IDs queued at this location. First match in array is next to be activated.",
+				},
+				"active_game_id": map[string]interface{}{
+					"type":        "string",
+					"description": "ID of the currently active match at this location. Only one match can be active per location.",
 				},
 			},
 			"required": []string{"operation", "tournament_id"},

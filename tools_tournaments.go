@@ -61,14 +61,53 @@ func handleTournamentsTool(args map[string]interface{}) (string, error) {
 // getTournamentsToolInfo returns the tool definition for tournament operations
 func getTournamentsToolInfo() ToolInfo {
 	return ToolInfo{
-		Name:        "truefinals_tournaments",
-		Description: "Manage tournaments in TrueFinals. Create, update, delete, and query tournaments and their settings. Note: When listing tournaments, test tournaments (containing 'TEST' or 'test' in the name) are filtered out by default.",
+		Name: "truefinals_tournaments",
+		Description: `Manage NHRL tournaments in the TrueFinals system. This is the primary tool for tournament administration and bracket management.
+
+TrueFinals is NHRL's tournament management platform that handles:
+- Tournament creation and configuration
+- Bracket generation and management  
+- Match scheduling and progression
+- Player/bot registration and seeding
+- Live scoring and results tracking
+
+Use this tool when you need to:
+- Create or modify tournaments
+- View tournament brackets and standings
+- Check tournament settings and participants
+- Start tournaments or reset brackets
+- Manage tournament progression
+
+Note: Test tournaments (containing 'TEST' or 'test' in the name) are filtered out by default when listing. Use include_test_tournaments=true to show all tournaments.`,
 		InputSchema: map[string]interface{}{
 			"type": "object",
 			"properties": map[string]interface{}{
 				"operation": map[string]interface{}{
-					"type":        "string",
-					"description": "The operation to perform",
+					"type": "string",
+					"description": `The tournament operation to perform:
+
+QUERY OPERATIONS (read-only):
+- list: Get all tournaments you have access to (filters test tournaments by default)
+- get: Get complete tournament data including bracket, games, and participants
+- details: Get lightweight tournament info without full bracket data
+- format: Get tournament format settings (single elim, double elim, round robin)
+- overlay_params: Get streaming overlay configuration
+- description: Get tournament description text
+- private: Get private tournament data (webhooks, etc.)
+- webhooks: Get configured webhooks for tournament events
+
+MODIFICATION OPERATIONS (require write access):
+- create: Create a new tournament with specified settings
+- update: Update tournament basic settings (title, location, privacy)
+- update_description: Update tournament description text
+- update_overlay_params: Update streaming overlay settings
+- update_webhooks: Update webhook configurations
+
+TOURNAMENT CONTROL:
+- start: Start the tournament (locks bracket and begins matches)
+- reset: Reset tournament bracket (bracket_only or all)
+- push_schedule: Delay all scheduled matches by specified minutes
+- delete: Delete the tournament completely`,
 					"enum": []string{
 						"list", "get", "details", "format", "overlay_params", "description", "private", "webhooks",
 						"create", "update", "update_description", "update_overlay_params", "update_webhooks",
@@ -77,90 +116,90 @@ func getTournamentsToolInfo() ToolInfo {
 				},
 				"tournament_id": map[string]interface{}{
 					"type":        "string",
-					"description": "Tournament ID - required for all operations except 'list' and 'create'",
+					"description": "Unique tournament identifier. Required for all operations except 'list' and 'create'. Format is typically lowercase with underscores (e.g., 'nhrl_dec24_3lb')",
 				},
 				// Tournament creation/update fields
 				"title": map[string]interface{}{
 					"type":        "string",
-					"description": "Tournament title (max 64 characters)",
+					"description": "Tournament display title (max 64 characters). Example: 'NHRL December 2024 - 3lb Beetleweight'",
 				},
 				"creator_profile_id": map[string]interface{}{
 					"type":        "string",
-					"description": "Creator profile ID",
+					"description": "Profile ID of tournament creator. Required for create operation.",
 				},
 				"game_title_info": map[string]interface{}{
 					"type":        "object",
-					"description": "Game title information",
+					"description": "Game/sport information for the tournament. For NHRL, typically includes weight class info.",
 				},
 				"event_location": map[string]interface{}{
 					"type":        "string",
-					"description": "Event location (max 128 characters)",
+					"description": "Physical venue location (max 128 characters). Example: 'House of Havoc - Norwalk, CT'",
 				},
 				"scheduled_start_time": map[string]interface{}{
 					"type":        "integer",
-					"description": "Scheduled start time (Unix timestamp)",
+					"description": "Tournament start time as Unix timestamp (seconds since epoch). Used for scheduling.",
 				},
 				"privacy": map[string]interface{}{
 					"type":        "string",
-					"description": "Tournament privacy setting",
+					"description": "Tournament visibility: 'public' (visible to all), 'unlisted' (accessible via link), 'private' (invite only)",
 					"enum":        []string{"public", "unlisted", "private"},
 				},
 				"display_check_in_status": map[string]interface{}{
 					"type":        "boolean",
-					"description": "Whether to display check-in status",
+					"description": "Whether to show player check-in status on bracket. Useful for tracking attendance.",
 				},
 				"logo_url": map[string]interface{}{
 					"type":        "string",
-					"description": "Tournament logo URL",
+					"description": "URL for tournament logo image. Displayed on bracket and overlays.",
 				},
 				"thumbnail_url": map[string]interface{}{
 					"type":        "string",
-					"description": "Tournament thumbnail URL",
+					"description": "URL for tournament thumbnail image. Used in tournament listings.",
 				},
 				"description": map[string]interface{}{
 					"type":        "string",
-					"description": "Tournament description (max 50000 characters)",
+					"description": "Detailed tournament description (max 50000 characters). Can include rules, schedule, prizes, etc. Supports markdown formatting.",
 				},
 				"format_options": map[string]interface{}{
 					"type":        "object",
-					"description": "Tournament format options (single_elimination, double_elimination, round_robin)",
+					"description": "Tournament format configuration. Specify type (single_elimination, double_elimination, round_robin) and related settings like third place match, group stage, etc.",
 				},
 				"participants": map[string]interface{}{
 					"type":        "array",
-					"description": "List of tournament participants",
+					"description": "List of tournament participants with seeding information. Each entry includes player/team data and optional seed number.",
 				},
 				"non_participants": map[string]interface{}{
 					"type":        "array",
-					"description": "List of non-participants",
+					"description": "List of registered players not participating in bracket (e.g., alternates, staff).",
 				},
 				"locations": map[string]interface{}{
 					"type":        "array",
-					"description": "Tournament locations",
+					"description": "Tournament venue locations. For NHRL, typically includes cage/arena assignments.",
 				},
 				"webhooks": map[string]interface{}{
 					"type":        "array",
-					"description": "Tournament webhooks",
+					"description": "Webhook configurations for tournament events (match start, match end, tournament complete, etc.)",
 				},
 				"overlay_params": map[string]interface{}{
 					"type":        "object",
-					"description": "Overlay parameters for tournament display",
+					"description": "Streaming overlay parameters including colors, fonts, sponsor logos, and layout settings.",
 				},
 				"score_updates": map[string]interface{}{
 					"type":        "object",
-					"description": "Score update information",
+					"description": "Configuration for how scores are updated (manual, API integration, etc.)",
 				},
 				"reset_mode": map[string]interface{}{
 					"type":        "string",
-					"description": "Reset mode for tournament reset operation",
+					"description": "Reset scope for tournament reset: 'bracket_only' (keep players, reset matches) or 'all' (full reset)",
 					"enum":        []string{"bracket_only", "all"},
 				},
 				"delay_minutes": map[string]interface{}{
 					"type":        "integer",
-					"description": "Delay in minutes for pushing game schedules",
+					"description": "Number of minutes to delay all scheduled matches. Used with push_schedule operation.",
 				},
 				"include_test_tournaments": map[string]interface{}{
 					"type":        "boolean",
-					"description": "Whether to include tournaments with 'TEST' or 'test' in the name (default: false)",
+					"description": "Include test tournaments in list results. Default: false (test tournaments are hidden)",
 				},
 			},
 			"required": []string{"operation"},

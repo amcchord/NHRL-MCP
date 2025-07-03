@@ -33,27 +33,51 @@ func handleBracketTool(args map[string]interface{}) (string, error) {
 // getBracketToolInfo returns the tool definition for bracket operations
 func getBracketToolInfo() ToolInfo {
 	return ToolInfo{
-		Name:        "truefinals_bracket",
-		Description: "Get tournament bracket information formatted for display. Returns structured data showing tournament progression, current matches, and results.",
+		Name: "truefinals_bracket",
+		Description: `View and analyze tournament bracket progression in TrueFinals. This tool provides formatted bracket data showing matches, results, and tournament flow.
+
+The bracket tool is essential for:
+- Viewing current tournament standings and progress
+- Checking upcoming matches and their prerequisites  
+- Understanding tournament flow (winners/losers brackets)
+- Identifying which bots are still competing
+- Tracking path to championship
+
+Use this tool when you need to:
+- Display the current state of a tournament bracket
+- Check specific round matchups
+- View player standings and eliminations
+- Understand tournament progression paths
+- See completed and upcoming matches
+
+NHRL tournaments typically use double elimination format where:
+- Winners bracket: Undefeated bots compete
+- Losers bracket: Bots with one loss get second chance
+- Grand Finals: Winners bracket champion vs Losers bracket champion
+- Grand Finals Reset: If losers bracket champion wins first set`,
 		InputSchema: map[string]interface{}{
 			"type": "object",
 			"properties": map[string]interface{}{
 				"operation": map[string]interface{}{
-					"type":        "string",
-					"description": "The operation to perform",
-					"enum":        []string{"get", "get_round", "get_standings"},
+					"type": "string",
+					"description": `The bracket operation to perform:
+
+- get: Retrieve complete bracket with all rounds and matches
+- get_round: Focus on specific round of competition  
+- get_standings: Show current player rankings and records`,
+					"enum": []string{"get", "get_round", "get_standings"},
 				},
 				"tournament_id": map[string]interface{}{
 					"type":        "string",
-					"description": "Tournament ID - required for all operations",
+					"description": "Tournament identifier. Required for all operations. Format: 'nhrl_month##_weightclass'",
 				},
 				"round": map[string]interface{}{
 					"type":        "integer",
-					"description": "Specific round number to get (for get_round operation)",
+					"description": "Specific round number for get_round operation. Positive numbers = winners bracket, negative = losers bracket. Round 1 is finals, higher numbers are earlier rounds.",
 				},
 				"bracket_type": map[string]interface{}{
 					"type":        "string",
-					"description": "Filter by bracket type",
+					"description": "Filter results by bracket type. Use 'winners' for undefeated path, 'losers' for elimination bracket, 'all' for both.",
 					"enum":        []string{"winners", "losers", "all"},
 				},
 			},

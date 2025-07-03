@@ -46,94 +46,90 @@ func handlePlayersTool(args map[string]interface{}) (string, error) {
 // getPlayersToolInfo returns the tool definition for player operations
 func getPlayersToolInfo() ToolInfo {
 	return ToolInfo{
-		Name:        "truefinals_players",
-		Description: "Manage tournament players in TrueFinals. Add, update, delete players, manage seeding, check-ins, and disqualifications.",
+		Name: "truefinals_players",
+		Description: `Manage tournament participants (bots and their operators) in TrueFinals. This tool handles registration, seeding, and participant management for NHRL tournaments.
+
+In NHRL context, "players" represent combat robots and their human operators/teams. Each tournament has participants who compete in brackets based on weight class.
+
+Use this tool when you need to:
+- Add or remove tournament participants
+- Set or update seeding for bracket generation
+- Manage participant check-in status
+- Handle disqualifications or withdrawals
+- Update bot/team information
+- Swap participants or correct entries
+
+Note: Seeding is crucial for bracket fairness - higher seeds face lower seeds in early rounds.`,
 		InputSchema: map[string]interface{}{
 			"type": "object",
 			"properties": map[string]interface{}{
 				"operation": map[string]interface{}{
-					"type":        "string",
-					"description": "The operation to perform",
+					"type": "string",
+					"description": `The player/participant operation to perform:
+
+QUERY OPERATIONS:
+- list: Get all participants in a tournament
+- get: Get detailed information about a specific participant
+
+PARTICIPANT MANAGEMENT (require write access):
+- add: Register a new bot/team to the tournament
+- update: Update participant details (name, team info, etc.)
+- delete: Remove a participant from the tournament
+- set_seed: Assign or update seeding number (1 = top seed)
+- swap: Exchange positions of two participants in bracket
+- check_in: Mark participant as checked in and ready
+- undo_check_in: Clear check-in status
+- disqualify: Mark participant as disqualified
+- undisqualify: Remove disqualification status`,
 					"enum": []string{
-						"list", "get", "add", "update", "delete", "reseed",
-						"randomize", "bulk_update", "checkin", "disqualify",
+						"list", "get", "add", "update", "delete",
+						"set_seed", "swap", "check_in", "undo_check_in",
+						"disqualify", "undisqualify",
 					},
 				},
 				"tournament_id": map[string]interface{}{
 					"type":        "string",
-					"description": "Tournament ID - required for all operations",
+					"description": "Tournament identifier. Required for all operations. Format: 'nhrl_month##_weightclass'",
 				},
 				"player_id": map[string]interface{}{
 					"type":        "string",
-					"description": "Player ID - required for single player operations",
+					"description": "Participant/player profile ID. Required for single participant operations.",
 				},
-				"include_bye_players": map[string]interface{}{
-					"type":        "boolean",
-					"description": "Whether to include bye players in results",
+				"player_id_1": map[string]interface{}{
+					"type":        "string",
+					"description": "First participant ID for swap operation. This participant will take the position of player_id_2.",
 				},
-				"seed_idx": map[string]interface{}{
-					"type":        "integer",
-					"description": "Seed index for player position",
+				"player_id_2": map[string]interface{}{
+					"type":        "string",
+					"description": "Second participant ID for swap operation. This participant will take the position of player_id_1.",
 				},
 				"name": map[string]interface{}{
 					"type":        "string",
-					"description": "Player name (1-32 characters)",
-					"minLength":   1,
-					"maxLength":   32,
+					"description": "Bot/robot name. Examples: 'Ripperoni', 'Bloodsport', 'Malice'",
 				},
-				"photo_url": map[string]interface{}{
+				"display_name": map[string]interface{}{
 					"type":        "string",
-					"description": "Player photo URL",
-					"maxLength":   1000,
+					"description": "Display name for bracket/overlay. Can include team name or sponsors.",
 				},
-				"profile_info": map[string]interface{}{
+				"team_name": map[string]interface{}{
+					"type":        "string",
+					"description": "Team or operator name. Examples: 'Team Velocity', 'Chaos Corps'",
+				},
+				"seed": map[string]interface{}{
+					"type":        "integer",
+					"description": "Seeding number for bracket placement. 1 = highest seed (best ranking). Lower seeds face higher seeds in early rounds.",
+				},
+				"checked_in": map[string]interface{}{
+					"type":        "boolean",
+					"description": "Whether the participant has checked in for the tournament. Required before matches can begin.",
+				},
+				"disqualified": map[string]interface{}{
+					"type":        "boolean",
+					"description": "Whether the participant is disqualified. Disqualified bots cannot compete but remain in bracket.",
+				},
+				"profile_data": map[string]interface{}{
 					"type":        "object",
-					"description": "Player profile information",
-					"properties": map[string]interface{}{
-						"id": map[string]interface{}{
-							"type": "string",
-						},
-						"tag": map[string]interface{}{
-							"type":    "string",
-							"pattern": "^.*#[0-9]{4}",
-						},
-						"name": map[string]interface{}{
-							"type":      "string",
-							"minLength": 1,
-							"maxLength": 32,
-						},
-						"photo_url": map[string]interface{}{
-							"type":      "string",
-							"maxLength": 1000,
-						},
-						"pronouns": map[string]interface{}{
-							"type":      "string",
-							"maxLength": 32,
-						},
-						"twitch_handle": map[string]interface{}{
-							"type": "string",
-						},
-						"twitter_handle": map[string]interface{}{
-							"type": "string",
-						},
-						"startgg_player_id": map[string]interface{}{
-							"type":    "integer",
-							"minimum": 1,
-						},
-					},
-				},
-				"participants": map[string]interface{}{
-					"type":        "array",
-					"description": "Array of participant player information for bulk operations",
-				},
-				"non_participants": map[string]interface{}{
-					"type":        "array",
-					"description": "Array of non-participant player information for bulk operations",
-				},
-				"check_in_status": map[string]interface{}{
-					"type":        "string",
-					"description": "Check-in status for player",
-					"enum":        []string{"not_ready", "checked_in", "waiting"},
+					"description": "Additional participant data including contact info, bot specifications, sponsors, etc.",
 				},
 			},
 			"required": []string{"operation", "tournament_id"},

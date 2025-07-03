@@ -54,100 +54,86 @@ func handleGamesTool(args map[string]interface{}) (string, error) {
 // getGamesToolInfo returns the tool definition for game operations
 func getGamesToolInfo() ToolInfo {
 	return ToolInfo{
-		Name:        "truefinals_games",
-		Description: "Manage games within tournaments in TrueFinals. Create, update, delete exhibition games, and manage game states and scores.",
+		Name: "truefinals_games",
+		Description: `Manage individual matches/games within NHRL tournaments in TrueFinals. This tool handles match administration, scoring, and results.
+
+In NHRL tournaments, "games" represent individual robot combat matches between two bots. Each match is part of the tournament bracket structure and progresses the tournament when completed.
+
+Use this tool when you need to:
+- View match details and current scores
+- Update match results and declare winners
+- Create exhibition/non-bracket matches
+- Check match status and progression
+- Record specific win methods (KO, JD, DQ)
+
+Common match identifiers in NHRL:
+- Qualifying rounds: Q1-1, Q2W-5, Q2L-3, Q3-2
+- Winners bracket: W-1, W-5, WF (Winners Final)
+- Losers bracket: L-1, L-8, LF (Losers Final)  
+- Finals: GF (Grand Final), GFR (Grand Final Reset)`,
 		InputSchema: map[string]interface{}{
 			"type": "object",
 			"properties": map[string]interface{}{
 				"operation": map[string]interface{}{
-					"type":        "string",
-					"description": "The operation to perform",
+					"type": "string",
+					"description": `The game/match operation to perform:
+
+QUERY OPERATIONS:
+- list: Get all matches in a tournament with current status
+- get: Get detailed information about a specific match
+
+MATCH UPDATES (require write access):
+- update: Update match score or result
+- create_exhibition: Create a non-bracket exhibition match
+- delete_exhibition: Remove an exhibition match
+- report_winner: Declare match winner with specific win method
+- unreport_winner: Clear match result (reset to pending)
+- set_in_progress: Mark match as currently being fought
+- set_not_started: Reset match to not started status`,
 					"enum": []string{
-						"list", "get", "add_exhibition", "edit_exhibition", "delete_exhibition",
-						"bulk_add_exhibition", "bulk_delete_exhibition", "update", "update_score",
-						"update_state", "update_scheduled_time", "update_location", "update_checkin", "undo",
+						"list", "get", "update", "create_exhibition", "delete_exhibition",
+						"report_winner", "unreport_winner", "set_in_progress", "set_not_started",
 					},
 				},
 				"tournament_id": map[string]interface{}{
 					"type":        "string",
-					"description": "Tournament ID - required for all operations",
+					"description": "Tournament identifier. Required for all operations. Format: 'nhrl_month##_weightclass'",
 				},
 				"game_id": map[string]interface{}{
 					"type":        "string",
-					"description": "Game ID - required for single game operations",
+					"description": "Match/game identifier within the tournament. Required for single match operations. Examples: 'W-5' (winners bracket), 'Q1-12' (qualifying), 'GF' (grand final)",
 				},
-				// Exhibition game fields
-				"name": map[string]interface{}{
-					"type":        "string",
-					"description": "Game name (1-6 characters, A-Z0-9_-)",
-				},
-				"score_to_win": map[string]interface{}{
+				"player1_score": map[string]interface{}{
 					"type":        "integer",
-					"description": "Score needed to win (1-5)",
-					"minimum":     1,
-					"maximum":     5,
+					"description": "Score for player 1 (left side of bracket). In NHRL, typically 0 or 1 since matches are single elimination.",
 				},
-				"player_ids": map[string]interface{}{
-					"type":        "array",
-					"description": "Array of player IDs for the game",
-					"items": map[string]interface{}{
-						"type": "string",
-					},
+				"player2_score": map[string]interface{}{
+					"type":        "integer",
+					"description": "Score for player 2 (right side of bracket). In NHRL, typically 0 or 1 since matches are single elimination.",
 				},
-				"games_info": map[string]interface{}{
-					"type":        "array",
-					"description": "Array of game information for bulk operations",
-				},
-				"game_ids": map[string]interface{}{
-					"type":        "array",
-					"description": "Array of game IDs for bulk deletion",
-				},
-				// Game update fields
-				"state": map[string]interface{}{
+				"winner_id": map[string]interface{}{
 					"type":        "string",
-					"description": "Game state",
-					"enum":        []string{"unavailable", "available", "called", "active", "hold", "done"},
+					"description": "Profile ID of the match winner. Used with report_winner operation.",
 				},
-				"slots": map[string]interface{}{
-					"type":        "array",
-					"description": "Game slot information",
+				"win_annotation": map[string]interface{}{
+					"type":        "string",
+					"description": "Method of victory for NHRL matches. Common values: 'KO' (knockout), 'JD' (judges decision), 'DQ' (disqualification), 'FF' (forfeit)",
+				},
+				"match_length": map[string]interface{}{
+					"type":        "integer",
+					"description": "Match duration in seconds. Used to record how long the fight lasted before conclusion.",
+				},
+				"status": map[string]interface{}{
+					"type":        "string",
+					"description": "Match status for filtering or updates. Values: 'pending', 'in_progress', 'complete'",
 				},
 				"location_id": map[string]interface{}{
 					"type":        "string",
-					"description": "Location ID for the game",
+					"description": "Venue/cage location ID where the match is scheduled. For NHRL, this typically corresponds to a specific combat cage.",
 				},
-				"result_annotation": map[string]interface{}{
-					"type":        "string",
-					"description": "Result annotation",
-					"enum":        []string{"KO", "TO", "JD", "TKO", "HLD", "BY", "DQ", "FF", "T"},
-				},
-				"scores": map[string]interface{}{
+				"participant_data": map[string]interface{}{
 					"type":        "array",
-					"description": "Array of scores for game slots",
-				},
-				"scheduled_time": map[string]interface{}{
-					"type":        "number",
-					"description": "Scheduled time for the game (Unix timestamp)",
-				},
-				"location_queue_idx": map[string]interface{}{
-					"type":        "integer",
-					"description": "Queue index for location assignment",
-					"minimum":     0,
-				},
-				"activate": map[string]interface{}{
-					"type":        "boolean",
-					"description": "Whether to activate the game at the location",
-				},
-				"slot_idx": map[string]interface{}{
-					"type":        "integer",
-					"description": "Slot index for check-in updates",
-					"minimum":     0,
-					"maximum":     1,
-				},
-				"check_in_status": map[string]interface{}{
-					"type":        "string",
-					"description": "Check-in status for player",
-					"enum":        []string{"not_ready", "checked_in", "waiting"},
+					"description": "Participant information for exhibition matches. Each entry should include bot name and operator details.",
 				},
 			},
 			"required": []string{"operation", "tournament_id"},

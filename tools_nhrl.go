@@ -61,14 +61,50 @@ func handleNHRLStatsTool(args map[string]interface{}) (string, error) {
 // getNHRLStatsToolInfo returns the tool definition for NHRL stats operations
 func getNHRLStatsToolInfo() ToolInfo {
 	return ToolInfo{
-		Name:        "nhrl_stats",
-		Description: "Query NHRL (National Havoc Robot League) statsbook and BrettZone tournament system for comprehensive combat robot data. Access bot performance data, rankings, fight records, tournament statistics, live match data, and match review videos. Includes both historical statsbook data and real-time tournament match information.",
+		Name: "nhrl_stats",
+		Description: `Query NHRL (National Havoc Robot League) statsbook and BrettZone tournament system for comprehensive combat robot data. 
+
+This tool provides access to:
+- Bot performance metrics, rankings, and fight history
+- Head-to-head matchup records between specific bots
+- Weight class statistics and leaderboards  
+- Tournament bracket information and match results
+- Live fight preparation data for upcoming matches
+- Match review video URLs for past fights
+- Bot images and profile information
+
+Use this tool when you need historical data, performance statistics, or current tournament information. The data comes from both NHRL's official statsbook (historical records) and BrettZone (live tournament management).`,
 		InputSchema: map[string]interface{}{
 			"type": "object",
 			"properties": map[string]interface{}{
 				"operation": map[string]interface{}{
-					"type":        "string",
-					"description": "The NHRL stats operation to perform",
+					"type": "string",
+					"description": `The specific NHRL stats operation to perform:
+
+BOT-SPECIFIC OPERATIONS (require bot_name):
+- get_bot_rank: Get current Elo ranking and rank position for a specific bot
+- get_bot_fights: Get complete fight history with dates, opponents, results, and methods
+- get_bot_head_to_head: Get win/loss records against all opponents the bot has faced
+- get_bot_stats_by_season: Get wins, losses, KOs, and other stats for a specific season
+- get_bot_streak_stats: Get current and historical winning/losing streak information
+- get_bot_event_participants: List all tournaments/events the bot has participated in
+- get_bot_picture_url: Get thumbnail and full-size image URLs for the bot
+
+WEIGHT CLASS OPERATIONS (use weight_class parameter):
+- get_weight_class_dumpster_count: Get bots with most podium finishes (championship achievements)
+- get_weight_class_event_winners: List tournament winners with dates and events
+- get_weight_class_fastest_kos: Leaderboard of fastest knockout times
+- get_weight_class_longest_streaks: Bots with longest winning streaks
+- get_weight_class_stat_summary: Overall statistics for all bots in the weight class
+
+TOURNAMENT/MATCH OPERATIONS:
+- get_tournament_matches: Get all matches from a BrettZone tournament with results and bracket info
+- get_match_review_url: Generate a video review URL for a specific match
+- get_live_fight_stats: Get head-to-head stats and bot info for an upcoming match (requires bot1, bot2)
+
+GENERAL OPERATIONS:
+- get_random_fight: Get a random fight from NHRL history (fun/demo purposes)
+- get_qualification_system: Explain NHRL's tournament qualification rounds and progression`,
 					"enum": []string{
 						"get_bot_rank", "get_bot_fights", "get_bot_head_to_head", "get_bot_stats_by_season",
 						"get_bot_streak_stats", "get_bot_event_participants", "get_weight_class_dumpster_count",
@@ -79,45 +115,45 @@ func getNHRLStatsToolInfo() ToolInfo {
 				},
 				"bot_name": map[string]interface{}{
 					"type":        "string",
-					"description": "Name of the bot (required for bot-specific operations). Spaces will be automatically converted to underscores.",
+					"description": "Name of the bot (required for bot-specific operations). Case-insensitive. Spaces will be automatically converted to underscores. Examples: 'Ripperoni', 'Lynx', 'Slammo', 'Bloodsport'",
 				},
 				"bot1": map[string]interface{}{
 					"type":        "string",
-					"description": "First bot name for head-to-head comparison (used with get_live_fight_stats)",
+					"description": "First bot name for head-to-head comparison (used with get_live_fight_stats). This is typically the opponent.",
 				},
 				"bot2": map[string]interface{}{
 					"type":        "string",
-					"description": "Second bot name for head-to-head comparison (used with get_live_fight_stats). Stats returned will be for this bot with H2H data against bot1.",
+					"description": "Second bot name for head-to-head comparison (used with get_live_fight_stats). Stats returned will be for this bot, including head-to-head record against bot1.",
 				},
 				"weight_class": map[string]interface{}{
 					"type":        "string",
-					"description": "Weight class for the query",
+					"description": "Weight class for the query. Use '3lb' (Beetleweight), '12lb' (Antweight), or '30lb' (Hobbyweight). Alternative names like 'beetleweight', 'antweight', 'hobbyweight' are also accepted.",
 					"enum":        []string{"3lb", "12lb", "30lb", "beetleweight", "antweight", "hobbyweight"},
 				},
 				"season": map[string]interface{}{
 					"type":        "string",
-					"description": "Season for stats query",
+					"description": "Season for stats query. Use 'current' for ongoing season, 'all-time' for complete history, or specific years like '2023', '2022', etc.",
 					"enum":        []string{"current", "all-time", "2018-2019", "2020", "2021", "2022", "2023"},
 				},
 				"tournament_id": map[string]interface{}{
 					"type":        "string",
-					"description": "Tournament ID for BrettZone operations (e.g., 'nhrl_june25_30lb')",
+					"description": "BrettZone tournament identifier for tournament operations. Format is typically 'nhrl_month##_weightclass' (e.g., 'nhrl_june25_30lb' for June 2025 30lb tournament). Required for get_tournament_matches and get_match_review_url.",
 				},
 				"game_id": map[string]interface{}{
 					"type":        "string",
-					"description": "Game/Match ID for match review URL generation (e.g., 'W-5')",
+					"description": "Match/Game identifier within a tournament for video review. Examples: 'W-5' (winners bracket match 5), 'Q1-12' (qualifying round 1 match 12), 'GF' (grand finals). Required for get_match_review_url.",
 				},
 				"cage_number": map[string]interface{}{
 					"type":        "number",
-					"description": "Cage number for match review (1-4, defaults to 1)",
+					"description": "NHRL cage/arena number (1-4) where the match took place. Defaults to 1 if not specified. Used for generating correct video review URLs.",
 				},
 				"time_seconds": map[string]interface{}{
 					"type":        "number",
-					"description": "Start time in seconds for match review (defaults to 3.0)",
+					"description": "Start time in seconds for match review video. Defaults to 3.0 seconds. Use higher values to skip intro and jump to specific moments.",
 				},
 				"round_code": map[string]interface{}{
 					"type":        "string",
-					"description": "Round code (Q1, Q2W, Q2L, Q3) to get specific information about that qualification round",
+					"description": "NHRL qualification round code to get detailed information about. Options: 'Q1' (Opening round), 'Q2W' (The Cusp - for Q1 winners), 'Q2L' (Redemption - for Q1 losers), 'Q3' (Bubble - final qualifying round).",
 				},
 			},
 			"required": []string{"operation"},
